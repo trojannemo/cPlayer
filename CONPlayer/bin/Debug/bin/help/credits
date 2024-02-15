@@ -1,0 +1,15 @@
+CREDITS:
+DJ Shepherd for the X360 library
+raynebc for all the assistance with MIDI files
+Mark Heath for the NAudio.MIDI library:
+http://naudio.codeplex.com/
+Ian Luck for the BASS audio library:
+http://www.un4seen.com/
+Bernd Niedergesaess for the BASS.NET API:
+http://bass.radio42.com/
+Maxton for his [classified] contributions (thanks)
+Matthew Sitton for the SngFileFormat library
+AddyMilldike for helping me with GHWT:DE
+PikminGuts92 for his songfuse tool
+
+Thanks to everyone else who helped along the way
