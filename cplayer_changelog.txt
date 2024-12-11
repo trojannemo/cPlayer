@@ -17,8 +17,6 @@ v3.1.0
 - Fixed behavior when scanning a folder and there are no target files found, cPlayer would get stuck on loading and you couldn't do anything or exit the program
 - Many other bug fixes and code improvements
 
-KNOWN BUG - Karaoke Mode doesn't work well with some RB4-to-RB2 midi files - appears something with the vocal phrase markers and/or vocal note lengths isn't right? Not sure. To be fixed when I figure out what's different about those few files.
-
 ----------
 
 NOTE: CPLAYER HAS MIGRATED FROM NET FRAMEWORK 4.0 TO 4.8.1. ALSO ALL AUDIO PROCESSING DEPENDENCIES WERE UPDATED TO MOST RECENT (BASS, BASS.NET, BASS ADD-ONS)
