@@ -347,7 +347,7 @@ namespace cPlayer
             this.Name = "MIDISelector";
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "MIDI display settings:";
+            this.Text = "MIDI settings";
             this.TopMost = true;
             this.Shown += new System.EventHandler(this.MIDISelector_Shown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.MIDISelector_KeyUp);

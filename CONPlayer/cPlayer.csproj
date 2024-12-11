@@ -25,8 +25,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>83</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationRevision>85</ApplicationRevision>
+    <ApplicationVersion>3.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -60,10 +60,10 @@
     <StartupObject>cPlayer.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>7121D3C93A50E414EBF33E40C4D6B1F9853CB282</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>A2A1F72701D2CC9D21D107A32B286929BFCCD09D</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>CONPlayer_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>cPlayer_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -92,11 +92,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\bin\NAudio.dll</HintPath>
     </Reference>
-    <Reference Include="nautilus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="NautilusFREE, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>bin\Debug\bin\nautilus.dll</HintPath>
+      <HintPath>bin\Debug\bin\NautilusFREE.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="SharpMp4Parser, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\bin\SharpMp4Parser.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -120,6 +124,13 @@
       <DependentUpon>AudioSelector.cs</DependentUpon>
     </Compile>
     <Compile Include="DevIL.cs" />
+    <Compile Include="FNFParser.cs" />
+    <Compile Include="gifOverlay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="gifOverlay.Designer.cs">
+      <DependentUpon>gifOverlay.cs</DependentUpon>
+    </Compile>
     <Compile Include="HelpForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -127,6 +138,12 @@
       <DependentUpon>HelpForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ImageHeaders.cs" />
+    <Compile Include="KaraokeOverlayForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="KaraokeOverlayForm.Designer.cs">
+      <DependentUpon>KaraokeOverlayForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="LyricSelector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -181,6 +198,7 @@
     <Compile Include="x360\STFSDescriptor.cs" />
     <Compile Include="x360\STFSPackage.cs" />
     <Compile Include="x360\STFSStuff.cs" />
+    <Compile Include="yargSNG.cs" />
     <EmbeddedResource Include="Art.resx">
       <DependentUpon>Art.cs</DependentUpon>
     </EmbeddedResource>
@@ -190,8 +208,14 @@
     <EmbeddedResource Include="frmMain.resx">
       <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="gifOverlay.resx">
+      <DependentUpon>gifOverlay.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="HelpForm.resx">
       <DependentUpon>HelpForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="KaraokeOverlayForm.resx">
+      <DependentUpon>KaraokeOverlayForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="LyricSelector.resx">
       <DependentUpon>LyricSelector.cs</DependentUpon>
@@ -223,6 +247,7 @@
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="CONPlayer_TemporaryKey.pfx" />
+    <None Include="cPlayer_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -233,9 +258,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\loading-blue.gif" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\noart.jpg" />

@@ -44,7 +44,13 @@ namespace cPlayer
                 }
                 DTA = xDTA.Extract();
                 if (closeIO) xPackage.CloseIO();
-                return DTA != null && DTA.Length > 0;
+                if (DTA != null && DTA.Length > 0)
+                {
+                    ReadDTA(DTA);
+                    return true;
+                }
+                else
+                { return false; }
             }
             catch (Exception)
             {
@@ -101,8 +107,9 @@ namespace cPlayer
                 var xCON = new STFSPackage(xPackage);
                 return xCON.ParseSuccess && ExtractDTA(xCON, true);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show("ERROR: " + ex.Message);
                 return false;
             }
         }
@@ -117,17 +124,100 @@ namespace cPlayer
             Lead, Rhythm, Bass
         }
 
+        public bool ReadXMLFile(string xmlFile)
+        {
+            try
+            {
+                Tools = new NemoTools();
+                Songs = new List<SongData>();
+                var song = new SongData();
+                song.Initialize();
+                song.ChartAuthor = "Power Gig";
+                var sr = new StreamReader(xmlFile);
+                while (sr.Peek() >= 0)
+                {
+                    try
+                    {
+                        var line = sr.ReadLine();
+                        if (line.Contains("<title>") && line.Contains("</title>"))
+                        {
+                            song.Name = line.Replace("/", "").Replace("<title>", "").Trim();
+                        }
+                        else if (line.Contains("<artist>") && line.Contains("</artist>"))
+                        {
+                            song.Artist = line.Replace("/", "").Replace("<artist>", "").Trim();
+                        }
+                        else if (line.Contains("<album>") && line.Contains("</album>"))
+                        {
+                            song.Album = line.Replace("/", "").Replace("<album>", "").Trim();
+                        }
+                        else if (line.Contains("<genre>") && line.Contains("</genre>"))
+                        {
+                            song.Genre = line.Replace("/", "").Replace("<genre>", "").Trim();
+                        }
+                        else if (line.Contains("<year>") && line.Contains("</year>"))
+                        {
+                            song.YearReleased = Convert.ToInt16(line.Replace("/", "").Replace("<year>", "").Trim());
+                        }
+                        else if (line.Contains("<singer_gender>") && line.Contains("</singer_gender>"))
+                        {
+                            song.Gender = line.Replace("/", "").Replace("<singer_gender>", "").Trim();
+                        }
+                        else if (line.Contains("<guitar_intensity>") && line.Contains("</guitar_intensity>"))
+                        {
+                            song.GuitarDiff = Convert.ToInt16(line.Replace("/", "").Replace("<guitar_intensity>", "").Trim());
+                        }
+                        else if (line.Contains("<drums_intensity>") && line.Contains("</drums_intensity>"))
+                        {
+                            song.DrumsDiff = Convert.ToInt16(line.Replace("/", "").Replace("<drums_intensity>", "").Trim());
+                        }
+                        else if (line.Contains("<vocals_intensity>") && line.Contains("</vocals_intensity>"))
+                        {
+                            song.VocalsDiff = Convert.ToInt16(line.Replace("/", "").Replace("<vocals_intensity>", "").Trim());
+                        }
+                        else if (line.Contains("<preview"))
+                        {
+                            try
+                            {
+                                line = line.Replace("<preview start_position=\"", "").TrimStart();
+                                var preview = Convert.ToDouble(line.Substring(0, line.IndexOf("\"")));
+                                song.PreviewStart = (int)(preview * 1000);
+                            }
+                            catch { }
+                        }
+                        else if (line.Contains("<combined_audio"))
+                        {
+                            try
+                            {
+                                var index = line.IndexOf("num_channels=\"");
+                                line = line.Substring(index, line.Length - index).Trim();
+                                var channels = Convert.ToInt16(line.Replace("num_channels=\"", "").Replace("\"", "").Replace("/>", "").Trim());
+                                song.ChannelsTotal = channels;
+                            }
+                            catch { }
+                        }
+                    }
+                    catch (Exception ex) { }
+                }
+                sr.Dispose();
+                Songs.Add(song);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return Songs.Count == 1;
+        }
+
         public bool ReadHSANFile(string hsanFile)
         {
             try
             {
                 Tools = new NemoTools();
                 Songs = new List<SongData>();
-                
                 var song = new SongData();
                 song.Initialize();
                 song.ChartAuthor = "Rocksmith 2014";
-
                 var whichInstrument = new Instrument();
                 var sr = new StreamReader(hsanFile);
                 while (sr.Peek() >= 0)
@@ -207,10 +297,8 @@ namespace cPlayer
             {
                 Tools = new NemoTools();
                 Songs = new List<SongData>();
-                
                 var song = new SongData();
                 song.Initialize();
-
                 var sr = new StreamReader(iniFile);
                 while (sr.Peek() >= 0)
                 {
@@ -289,23 +377,98 @@ namespace cPlayer
             return Songs.Count == 1;
         }
 
+        public bool ReadFNFFile(string iniFile)
+        {
+            try
+            {
+                Tools = new NemoTools();
+                Songs = new List<SongData>();
+                var song = new SongData();
+                song.Initialize();
+                var sr = new StreamReader(iniFile);
+                while (sr.Peek() >= 0)
+                {
+                    try
+                    {
+                        var line = sr.ReadLine();
+                        if (line.Contains("artist=") || line.Contains("artist ="))
+                        {
+                            song.Artist = Tools.GetConfigString(line);
+                        }
+                        else if (line.Contains("name=") || line.Contains("name ="))
+                        {
+                            song.Name = Tools.GetConfigString(line);
+                        }
+                        else if (line.Contains("album=") || line.Contains("album ="))
+                        {
+                            song.Album = Tools.GetConfigString(line);
+                        }
+                        else if (line.Contains("year=") || line.Contains("year ="))
+                        {
+                            song.YearReleased = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("genre=") || line.Contains("genre ="))
+                        {
+                            song.Genre = Tools.GetConfigString(line);
+                            song.RawGenre = string.IsNullOrEmpty(song.Genre) ? "" : song.Genre;
+                        }
+                        else if (line.Contains("charter=") || line.Contains("charter ="))
+                        {
+                            song.ChartAuthor = Tools.GetConfigString(line);
+                        }
+                        else if (line.Contains("diff_guitar=") || line.Contains("diff_guitar ="))
+                        {
+                            song.GuitarDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_bass=") || line.Contains("diff_bass ="))
+                        {
+                            song.BassDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_drums=") || line.Contains("diff_drums ="))
+                        {
+                            song.DrumsDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_keys=") || line.Contains("diff_keys ="))
+                        {
+                            song.KeysDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_vocals=") || line.Contains("diff_vocals ="))
+                        {
+                            song.VocalsDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                    }
+                    catch (Exception)
+                    { }
+                }
+                sr.Dispose();
+                Songs.Add(song);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+            return Songs.Count == 1;
+        }
+
         public bool ReadINIFile(string iniFile)
         {
             try
             {
                 Tools = new NemoTools();
                 Songs = new List<SongData>();
-
                 var song = new SongData();
                 song.Initialize();
-
-                var sr = new StreamReader
-                    (iniFile);
+                var isFretSmasher = false;
+                var sr = new StreamReader(iniFile);
                 while (sr.Peek() >= 0)
                 {
                     try
                     {
                         var line = sr.ReadLine();
+                        if (line.Contains("diff") && line.Contains("-1"))
+                        {
+                            isFretSmasher |= true;
+                        }
                         if (line.Contains("artist=") || line.Contains("artist ="))
                         {
                             song.Artist = Tools.GetConfigString(line);
@@ -331,13 +494,13 @@ namespace cPlayer
                         {
                             song.Length = Convert.ToInt32(Tools.GetConfigString(line));
                         }
+                        else if (line.Contains("preview_start_time=") || line.Contains("preview_start_time ="))
+                        {
+                            song.PreviewStart = Convert.ToInt32(Tools.GetConfigString(line));
+                        }
                         else if (line.Contains("charter=") || line.Contains("charter ="))
                         {
                             song.ChartAuthor = Tools.GetConfigString(line);
-                        }
-                        else if (line.Contains("shortname=") || line.Contains("shortname ="))
-                        {
-                            song.ShortName = Tools.GetConfigString(line);
                         }
                         else if (line.Contains("diff_keys_real") && !line.Contains("diff_keys_real_ps"))
                         {
@@ -352,11 +515,45 @@ namespace cPlayer
                         {
                             song.PSDelay = Convert.ToInt16(Tools.GetConfigString(line));
                         }
+                        else if (line.Contains("diff_guitar=") || line.Contains("diff_guitar ="))
+                        {
+                            song.GuitarDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_bass=") || line.Contains("diff_bass ="))
+                        {
+                            song.BassDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_drums=") || line.Contains("diff_drums ="))
+                        {
+                            song.DrumsDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_keys=") || line.Contains("diff_keys ="))
+                        {
+                            song.KeysDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_vocals=") || line.Contains("diff_vocals ="))
+                        {
+                            song.VocalsDiff = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
+                        else if (line.Contains("diff_vocals_harm"))
+                        {
+                            song.VocalParts = Convert.ToInt16(Tools.GetConfigString(line));
+                        }
                     }
                     catch (Exception)
                     { }
                 }
                 sr.Dispose();
+
+                if (isFretSmasher)//it uses a different difficulty tier than other games so we need to add 1
+                {
+                    song.GuitarDiff += 1;
+                    song.BassDiff += 1;
+                    song.DrumsDiff += 1;
+                    song.VocalsDiff += 1;
+                    song.KeysDiff += 1;
+                }
+
                 Songs.Add(song);
             }
             catch (Exception)
@@ -399,6 +596,17 @@ namespace cPlayer
                     song.DTALines = entry;
                     song.DTAIndex = i;
 
+                    //RB1 short versions have double entries in the DTA and we have to ignore them
+                    var didDrums = false;
+                    var didBass = false;
+                    var didGuitar = false;
+                    var didKeys = false;
+                    var didVocals = false;
+                    var didCrowd = false;
+                    var didPans = false;
+                    var didCores = false;
+                    var didVols = false;
+
                     var open = 0;
                     var line = "";
                     var isDLC = false;
@@ -424,6 +632,11 @@ namespace cPlayer
                             }
                             if (line.Contains("(name") && !(line.Contains(("songs/"))))
                             {
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
                                 song.Name = GetSongName(line);
                             }
                             else if (line.Contains("'name'") && !(line.Contains("songs/")))
@@ -434,23 +647,28 @@ namespace cPlayer
                                 {
                                     song.Name = GetSongName(line);
                                 }
-                                else
+                                else if (!line.Contains("_short"))
                                 {
                                     song.FilePath = GetSongPath(line);
                                     song.InternalName = GetInternalName(line);
                                 }
                             }
-                            else if (line.Contains("songs/"))
+                            else if (line.Contains("songs/") && !line.Contains("_short"))
                             {
                                 song.FilePath = GetSongPath(line);
                                 song.InternalName = GetInternalName(line);
                             }
-                            else if (line.Contains("midi_file"))
+                            else if (line.Contains("midi_file") && !line.Contains("_short"))
                             {
                                 song.MIDIFile = line.Replace("midi_file", "").Replace("(", "").Replace(")", "").Replace("\"", "").Trim();
                             }
                             else if (line.Contains("(artist"))
                             {
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
                                 song.Artist = GetArtistName(line);
                             }
                             else if (line.Contains("'artist'"))
@@ -465,37 +683,84 @@ namespace cPlayer
                             }
                             else if (line.Contains("(tracks"))
                             {
-                                while (line != null && line.Trim() != ")")
+                                /*for (var x = 0; x < entry.Count; x++)
                                 {
-                                    if (line.ToLowerInvariant().Contains("bass"))
+                                    //if (line != null && line.Trim() != ")" && !line.Trim().Contains(")))"))
+                                    if (line == null || line.Trim() == ")" || line.Trim().Contains(")))"))
                                     {
+                                        z--;
+                                        line = entry[z];
+                                        break;
+                                    }
+                                    
+                                }*/
+                                while (line != null && line.Trim() != ")" && !line.Trim().Contains(")))"))
+                                {
+                                    if (line.ToLowerInvariant().Contains("bass") && !didBass)
+                                    {
+                                        if (!line.Contains(")"))
+                                        {
+                                            z++;
+                                            line = entry[z];
+                                        }
                                         song.ChannelsBass = getChannels(line, "bass");
                                         song.ChannelsBassStart = getChannelsStart(line, "bass");
+                                        didBass = true;
+                                        if (line.Contains(")))")) break;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("guitar"))
+                                    else if (line.ToLowerInvariant().Contains("guitar") && !didGuitar)
                                     {
+                                        if (!line.Contains(")"))
+                                        {
+                                            z++;
+                                            line = entry[z];
+                                        }
                                         song.ChannelsGuitar = getChannels(line, "guitar");
                                         song.ChannelsGuitarStart = getChannelsStart(line, "guitar");
+                                        didGuitar = true;
+                                        if (line.Contains(")))")) break;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("keys"))
+                                    else if (line.ToLowerInvariant().Contains("keys") && !didKeys)
                                     {
+                                        if (!line.Contains(")"))
+                                        {
+                                            z++;
+                                            line = entry[z];
+                                        }
                                         song.ChannelsKeys = getChannels(line, "keys");
                                         song.ChannelsKeysStart = getChannelsStart(line, "keys");
+                                        didKeys = true;
+                                        if (line.Contains(")))")) break;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("vocals"))
+                                    else if (line.ToLowerInvariant().Contains("vocals") && !didVocals)
                                     {
+                                        if (!line.Contains(")"))
+                                        {
+                                            z++;
+                                            line = entry[z];
+                                        }
                                         song.ChannelsVocals = getChannels(line, "vocals");
                                         song.ChannelsVocalsStart = getChannelsStart(line, "vocals");
+                                        didVocals = true;
+                                        if (line.Contains(")))")) break;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("drum"))
+                                    else if (line.ToLowerInvariant().Contains("drum") && !didDrums)
                                     {
+                                        if (!line.Contains(")"))
+                                        {
+                                            z++;
+                                            line = entry[z];
+                                        }
                                         song.ChannelsDrums = getChannels(line, "drum");
                                         song.ChannelsDrumsStart = getChannelsStart(line, "drum");
+                                        didDrums = true;
+                                        if (line.Contains(")))")) break;
                                     }
-                                    else if (line.Contains("crowd_channels"))
+                                    else if (line.Contains("crowd_channels") && !didCrowd)
                                     {
                                         song.ChannelsCrowd = getChannels(line, "crowd_channels");
                                         song.ChannelsCrowdStart = getChannelsStart(line, "crowd_channels");
+                                        didCrowd = true;
                                     }
                                     z++;
                                     line = entry[z];
@@ -507,7 +772,7 @@ namespace cPlayer
                                 line = entry[z];
                                 while (line != null && !line.ToLowerInvariant().Contains("pans"))
                                 {
-                                    if (line.ToLowerInvariant().Contains("bass"))
+                                    if (line.ToLowerInvariant().Contains("bass") && !didBass)
                                     {
                                         if (!line.Contains(")")) //RB1 songs with one channel have the channel right in this line
                                         {
@@ -516,8 +781,9 @@ namespace cPlayer
                                         }
                                         song.ChannelsBass = getChannels(line, "bass");
                                         song.ChannelsBassStart = getChannelsStart(line, "bass");
+                                        didBass = true;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("guitar"))
+                                    else if (line.ToLowerInvariant().Contains("guitar") && !didGuitar)
                                     {
                                         if (!line.Contains(")")) //RB1 songs with one channel have the channel right in this line
                                         {
@@ -526,8 +792,9 @@ namespace cPlayer
                                         }
                                         song.ChannelsGuitar = getChannels(line, "guitar");
                                         song.ChannelsGuitarStart = getChannelsStart(line, "guitar");
+                                        didGuitar = true;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("keys"))
+                                    else if (line.ToLowerInvariant().Contains("keys") && !didKeys)
                                     {
                                         if (!line.Contains(")"))
                                         {
@@ -536,8 +803,9 @@ namespace cPlayer
                                         }
                                         song.ChannelsKeys = getChannels(line, "keys");
                                         song.ChannelsKeysStart = getChannelsStart(line, "keys");
+                                        didKeys = true;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("vocals"))
+                                    else if (line.ToLowerInvariant().Contains("vocals") && !didVocals)
                                     {
                                         if (!line.Contains(")")) //RB1 songs with one channel have the channel right in this line
                                         {
@@ -546,27 +814,31 @@ namespace cPlayer
                                         }
                                         song.ChannelsVocals = getChannels(line, "vocals");
                                         song.ChannelsVocalsStart = getChannelsStart(line, "vocals");
+                                        didVocals = true;
                                     }
-                                    else if (line.ToLowerInvariant().Contains("drum"))
+                                    else if (line.ToLowerInvariant().Contains("drum") && !didDrums)
                                     {
                                         z++;
                                         line = entry[z];
                                         song.ChannelsDrums = getChannels(line, "drum");
                                         song.ChannelsDrumsStart = getChannelsStart(line, "drum");
+                                        didDrums = true;
                                     }
-                                    else if (line.Contains("crowd_channels"))
+                                    else if (line.Contains("crowd_channels") && !didCrowd)
                                     {
                                         song.ChannelsCrowd = getChannels(line, "crowd_channels");
                                         song.ChannelsCrowdStart = getChannelsStart(line, "crowd_channels");
+                                        didCrowd = true;
                                     }
                                     z++;
                                     line = entry[z];
                                 }
-                                if (line.Contains("'pans'"))
+                                if (line.Contains("'pans'") && !didPans)
                                 {
                                     z++;
                                     line = entry[z];
-                                    song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "");
+                                    song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "").Replace("\t", " ").Trim();
+                                    didPans = true;
                                 }
                             }
                             else if (line.Contains("song_id") && !line.Trim().StartsWith(";")) //ignore commented out original IDs
@@ -587,37 +859,58 @@ namespace cPlayer
                             {
                                 song.VocalParts = GetVocalParts(line);
                             }
-                            else if (line.Contains("'vols'"))
+                            else if (line.Contains("'vols'") && !didVols)
                             {
                                 z++;
                                 line = entry[z];
-                                song.AttenuationValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("vols", "");
+                                song.AttenuationValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("vols", "").Replace("\t", " ").Trim();
                                 song.OriginalAttenuationValues = song.AttenuationValues;
+                                didVols = true;
                             }
-                            else if (line.Contains("(vols"))
+                            else if (line.Contains("(vols") && !didVols)
                             {
-                                song.AttenuationValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("vols", "");
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
+                                song.AttenuationValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("vols", "").Replace("\t", " ").Trim();
                                 song.OriginalAttenuationValues = song.AttenuationValues;
+                                didVols = true;
                             }
-                            else if (line.Contains("'pans'"))
+                            else if (line.Contains("'pans'") && !didPans)
                             {
                                 z++;
                                 line = entry[z];
-                                song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "");
+                                song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "").Replace("\t", " ").Trim();
+                                didPans = true;
                             }
-                            else if (line.Contains("(pans"))
+                            else if (line.Contains("(pans") && !didPans)
                             {
-                                song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "");
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
+                                song.PanningValues = line.Replace("(", "").Replace(")", "").Replace("'", "").Replace("pans", "").Replace("\t", " ").Trim();
+                                didPans = true;
                             }
-                            else if (line.Contains("(cores"))
+                            else if (line.Contains("(cores") && !didCores)
                             {
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
                                 song.ChannelsTotal = GetAudioChannels(line);
+                                didCores = true;
                             }
-                            else if (line.Contains("'cores'"))
+                            else if (line.Contains("'cores'") && !didCores)
                             {
                                 z++;
                                 line = entry[z];
                                 song.ChannelsTotal = GetAudioChannels(line);
+                                didCores = true;
                             }
                             else if (line.Contains("hopo_threshold"))
                             {
@@ -630,10 +923,11 @@ namespace cPlayer
                                     song.HopoThreshold = 0;
                                 }
                             }
-                            else if (line.Contains("crowd_channels"))
+                            else if (line.Contains("crowd_channels") && !didCrowd)
                             {
                                 song.ChannelsCrowd = getChannels(line, "crowd_channels");
                                 song.ChannelsCrowdStart = getChannelsStart(line, "crowd_channels");
+                                didCrowd = true;
                             }
                             else if (line.Contains("bank sfx") && !line.Contains("drum_bank"))
                             {
@@ -756,6 +1050,11 @@ namespace cPlayer
                             }
                             else if (line.Contains("(album_name"))
                             {
+                                if (!line.Contains(")"))
+                                {
+                                    z++;
+                                    line = entry[z];
+                                }
                                 song.Album = GetAlbumName(line);
                             }
                             else if (line.Contains("'album_name'"))
@@ -955,91 +1254,6 @@ namespace cPlayer
             }
         }
 
-        public bool ReadXMLFile(string xmlFile)
-        {
-            try
-            {
-                Tools = new NemoTools();
-                Songs = new List<SongData>();
-                var song = new SongData();
-                song.Initialize();
-                song.ChartAuthor = "Power Gig";
-                var sr = new StreamReader(xmlFile);
-                while (sr.Peek() >= 0)
-                {
-                    try
-                    {
-                        var line = sr.ReadLine();
-                        if (line.Contains("<title>") && line.Contains("</title>"))
-                        {
-                            song.Name = line.Replace("/", "").Replace("<title>", "").Trim();
-                        }
-                        else if (line.Contains("<artist>") && line.Contains("</artist>"))
-                        {
-                            song.Artist = line.Replace("/", "").Replace("<artist>", "").Trim();
-                        }
-                        else if (line.Contains("<album>") && line.Contains("</album>"))
-                        {
-                            song.Album = line.Replace("/", "").Replace("<album>", "").Trim();
-                        }
-                        else if (line.Contains("<genre>") && line.Contains("</genre>"))
-                        {
-                            song.Genre = line.Replace("/", "").Replace("<genre>", "").Trim();
-                        }
-                        else if (line.Contains("<year>") && line.Contains("</year>"))
-                        {
-                            song.YearReleased = Convert.ToInt16(line.Replace("/", "").Replace("<year>", "").Trim());
-                        }
-                        else if (line.Contains("<singer_gender>") && line.Contains("</singer_gender>"))
-                        {
-                            song.Gender = line.Replace("/", "").Replace("<singer_gender>", "").Trim();
-                        }
-                        else if (line.Contains("<guitar_intensity>") && line.Contains("</guitar_intensity>"))
-                        {
-                            song.GuitarDiff = Convert.ToInt16(line.Replace("/", "").Replace("<guitar_intensity>", "").Trim());
-                        }
-                        else if (line.Contains("<drums_intensity>") && line.Contains("</drums_intensity>"))
-                        {
-                            song.DrumsDiff = Convert.ToInt16(line.Replace("/", "").Replace("<drums_intensity>", "").Trim());
-                        }
-                        else if (line.Contains("<vocals_intensity>") && line.Contains("</vocals_intensity>"))
-                        {
-                            song.VocalsDiff = Convert.ToInt16(line.Replace("/", "").Replace("<vocals_intensity>", "").Trim());
-                        }
-                        else if (line.Contains("<preview"))
-                        {
-                            try
-                            {
-                                line = line.Replace("<preview start_position=\"", "").TrimStart();
-                                var preview = Convert.ToDouble(line.Substring(0, line.IndexOf("\"")));
-                                song.PreviewStart = (int)(preview * 1000);
-                            }
-                            catch { }
-                        }
-                        else if (line.Contains("<combined_audio"))
-                        {
-                            try
-                            {
-                                var index = line.IndexOf("num_channels=\"");
-                                line = line.Substring(index, line.Length - index).Trim();
-                                var channels = Convert.ToInt16(line.Replace("num_channels=\"", "").Replace("\"", "").Replace("/>", "").Trim());
-                                song.ChannelsTotal = channels;
-                            }
-                            catch { }
-                        }
-                    }
-                    catch (Exception ex) { }
-                }
-                sr.Dispose();
-                Songs.Add(song);
-            }
-            catch (Exception ex)
-            {
-                return false;
-            }
-            return Songs.Count == 1;
-        }
-
         public int GetVolumeLevel(string line)
         {
             var volume = line.Replace("mute_volume_vocals", "");
@@ -1062,7 +1276,9 @@ namespace cPlayer
         public bool IsNumericID(string line)
         {
             var s_id = GetSongID(line);
-            //C3 unique numeric IDs are 10 digits
+            return int.TryParse(s_id, out int _id);
+            //only worry if it's not a numeric value, no longer need to check for all the below crazyness
+            /*//C3 unique numeric IDs are 10 digits
             //Xbox DLC/RBN IDs are 7 digits
             //Game IDs start at 1 and go to around 3000 (Green Day)
             //if (!PS3 && s_id.Length != 10 && s_id.Length != 7) return false;
@@ -1101,7 +1317,7 @@ namespace cPlayer
             catch
             {
                 return false;
-            }
+            }*/
         }
 
         /// <summary>
@@ -1998,8 +2214,8 @@ namespace cPlayer
             channels = channels.Replace("(", "");
             channels = channels.Replace(")", "");
             channels = channels.Replace("-", "");
-            channels = channels.Replace(" ", "").Trim();
-
+            channels = channels.Replace(" ", "");
+            channels = channels.Replace("\t", "").Trim();
             return channels.Length;
         }
 
@@ -2013,7 +2229,7 @@ namespace cPlayer
             return channels;
         }
 
-        private int getChannels(string line, string remove)
+        public int getChannels(string line, string remove)
         {
             if (line.Contains("()")) return 0; //old GHtoRB3 songs have empty entries
             var channels = CleanChannelsLine(line, remove);
@@ -2025,7 +2241,7 @@ namespace cPlayer
             return number;
         }
 
-        private int getChannelsStart(string line, string remove)
+        public int getChannelsStart(string line, string remove)
         {
             if (line.Contains("()")) return 0; //old GHtoRB3 songs have empty entries
             if (line.Contains(";")) return 0; //problem files from the RB4 to RB2 songs
@@ -2506,6 +2722,7 @@ namespace cPlayer
         public bool DisableProKeys { get; set; }
         public bool CATemh { get; set; }
         public bool HasSongIDError { get; set; }
+
         public string YargPath { get; set; }
 
         public void Initialize()
@@ -2626,7 +2843,7 @@ namespace cPlayer
 
         public string GetGender(bool NonBinary = false)
         {
-            return VocalsDiff == 0 ? "N/A" : (NonBinary ? Gender.Replace("Male", "Masc.").Replace("Female", "Fem.") : Gender);
+            return VocalsDiff == 0 || Gender == null ? "N/A" : (NonBinary ? Gender.Replace("Male", "Masc.").Replace("Female", "Fem.") : Gender);
         }
 
         public string GetAnimTempoText()

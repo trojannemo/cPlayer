@@ -37,14 +37,14 @@ namespace cPlayer
                 DeleteFile(output);
                 File.Move(input, output);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 try
                 {
                     File.Copy(input, output);
                     DeleteFile(input);
                 }
-                catch (Exception ex2)
+                catch (Exception)
                 {
                     return false;
                 }

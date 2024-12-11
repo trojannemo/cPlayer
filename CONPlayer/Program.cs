@@ -38,11 +38,10 @@ namespace cPlayer
                         ex.Message + Environment.NewLine + Environment.NewLine + "Stack Trace:" + Environment.NewLine + ex.StackTrace + Environment.NewLine + "[/code]");
 
                 if (MessageBox.Show("Derp, " + APP_NAME + " has crashed! Sorry.\nI copied some helpful information to your clipboard " +
-                    "that can help fix this in the future.\nClick OK to open the " + APP_NAME + " thread in the forums " +
-                    "and paste it on a message.\nClick Cancel to close this error message and " + APP_NAME + " will exit.",
+                    "that can help fix this in the future.\nClick OK to visit my website and you can find how to contact me through there.\nClick Cancel to close this error message and " + APP_NAME + " will exit.",
                     "Fatal Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Stop) == DialogResult.OK)
                 {
-                    Process.Start("https://www.rhythmgamingworld.com");
+                    Process.Start("https://nemosnautilus.com/cplayer/");
                 }
             }
             finally

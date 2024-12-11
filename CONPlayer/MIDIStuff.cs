@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using NAudio.Midi;
-using Un4seen.Bass;
 
 namespace cPlayer
 {
@@ -244,14 +242,26 @@ namespace cPlayer
                     }
                     else if (trackname.Contains("VOCALS"))
                     {
-                        List<MIDINote> toadd;
-                        CheckMIDITrack(MIDIFile.Events[i], MIDIInfo.Vocals.ValidNotes, out toadd);
+                        List<MIDINote> toAdd;
+                        CheckMIDITrack(MIDIFile.Events[i], MIDIInfo.Vocals.ValidNotes, out toAdd);
                         if (!output_info) continue;
-                        MIDIInfo.Vocals.ChartedNotes.AddRange(toadd);
+                        MIDIInfo.Vocals.ChartedNotes.AddRange(toAdd);
                         MIDIInfo.Vocals.NoteRange = MIDIInfo.GetNoteVariety(MIDIInfo.Vocals.ChartedNotes);
                         GetPhraseMarkers(MIDIFile.Events[i], InternalPhrasesVocals);
                         GetInternalLyrics(MIDIFile.Events[i], 0, InternalPhrasesVocals);
                         MIDIInfo.UsesCowbell = SongUsesCowbell(MIDIFile.Events[i]);
+
+                        //only do this if we have exact match of lyrics and vocal notes
+                        if (MIDIInfo.Vocals.ChartedNotes.Count == InternalVocals.Lyrics.Count)
+                        {
+                            List<MIDINote> mNotes = MIDIInfo.Vocals.ChartedNotes;
+                            mNotes.Sort((a, b) => a.NoteStart.CompareTo(b.NoteStart));
+
+                            for (int z = 0; z < mNotes.Count; z++)
+                            {
+                                InternalVocals.Lyrics[z].LyricDuration = mNotes[z].NoteLength;
+                            }
+                        }
                     }
                     else if (trackname.Contains("HARM1"))
                     {
@@ -872,6 +882,7 @@ namespace cPlayer
     {
         public string LyricText { get; set; }
         public double LyricStart { get; set; }
+        public double LyricDuration { get; set; }
     }
 
     public class MIDINote

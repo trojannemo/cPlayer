@@ -8,7 +8,6 @@ namespace cPlayer
     public partial class Updater : Form
     {
         private string fileURL = "";
-        private const string forumURL = "http://pksage.com/ccc/IPS/index.php?/topic/12089-cplayer-the-rock-band-customs-player-v240-9915/";
 
         public Updater()
         {
@@ -31,12 +30,6 @@ namespace cPlayer
             {
                 lstLog.Items.Add(line);
             }
-        }
-
-        private void btnForum_Click(object sender, EventArgs e)
-        {
-            Process.Start(forumURL);
-            Dispose();
         }
 
         private void btnDownload_Click(object sender, EventArgs e)

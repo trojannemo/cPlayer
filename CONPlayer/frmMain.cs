@@ -21,6 +21,12 @@ using Un4seen.Bass.Misc;
 using Un4seen.Bass.AddOn.Opus;
 using WMPLib;
 using AxWMPLib;
+using NautilusFREE;
+using static cPlayer.YARGSongFileStream;
+using Un4seen.Bass.AddOn.Enc;
+using System.Runtime.InteropServices;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Windows.Media.Animation;
 
 namespace cPlayer
 {
@@ -94,7 +100,7 @@ namespace cPlayer
         private string CurrentSongArt;
         private string CurrentSongArtBlurred;
         private string CurrentSongMIDI;
-        private string NextSongAudioPath;
+        //private string NextSongAudioPath;
         private string NextSongArtPNG;
         private string NextSongArtJPG;
         private string NextSongArtBlurred;
@@ -110,7 +116,7 @@ namespace cPlayer
         private Graphics Chart;
         private Bitmap ChartBitmap;
         private readonly string TempFolder;
-        private bool CancelWorkers;
+        public bool CancelWorkers;
         private readonly string EXE;
         private readonly string[] RecentPlaylists;
         private int BassMixer;
@@ -133,7 +139,7 @@ namespace cPlayer
         private PlaylistSorting SortingStyle;
         private bool isClosing;
         private bool ShowingNotFoundMessage;
-        private readonly C3Tools.nTools nautilus;
+        private readonly nTools nautilus;
         private SongData ActiveSongData;
         private AxWindowsMediaPlayer MediaPlayer;
         private string[] opusFiles;
@@ -141,6 +147,7 @@ namespace cPlayer
         private string[] mp3Files;
         private string[] wavFiles;
         private string[] cltFiles;
+        private string[] m4aFiles;
         private string currentKLIC;
         private string pkgPath;
         private string sngPath;
@@ -154,6 +161,17 @@ namespace cPlayer
         private string XMA_EXT_PATH;
         private string XMA_PATH;
         private string BandFusePath;
+        private readonly NemoFnFParser fnfParser;
+        public bool isPlayingM4A;
+        public string activeM4AFile;
+        private KaraokeOverlayForm KaraokeOverlay;
+        private gifOverlay GIFOverlay;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         private sealed class DarkRenderer : ToolStripProfessionalRenderer
         {
@@ -238,11 +256,12 @@ namespace cPlayer
 
         public frmMain()
         {
-            InitializeComponent();
+            InitializeComponent();                    
             Log("Initialized");
             EXE = "." + "e" + "x" + "e";
             Tools = new NemoTools();
-            nautilus = new C3Tools.nTools();
+            nautilus = new nTools();
+            fnfParser = new NemoFnFParser();
             Parser = new DTAParser();
             var DarkRenderer = new DarkRenderer();
             menuStrip1.Renderer = DarkRenderer;
@@ -250,7 +269,7 @@ namespace cPlayer
             NotifyContextMenu.Renderer = DarkRenderer;
             VisualsContextMenu.Renderer = DarkRenderer;
             workingContextMenu.Renderer = DarkRenderer;
-            picWorking.Parent = lstPlaylist;
+            //picWorking.Parent = lstPlaylist;
             SongsToAdd = new List<string>();
             Playlist = new List<Song>();
             StaticPlaylist = new List<Song>();
@@ -259,10 +278,30 @@ namespace cPlayer
             opusFiles = new string[20];
             oggFiles = new string[20];
             mp3Files = new string[20];
+            m4aFiles = new string[20];
             RecentPlaylists = new string[5];
             PracticeSessions = new List<PracticeSection>();
             MediaPlayer = new AxWindowsMediaPlayer();
             MediaPlayer.CreateControl();
+            // Handle the MouseDown event to show the context menu
+            MediaPlayer.MouseDownEvent += (object sender, _WMPOCXEvents_MouseDownEvent e) =>
+            {
+                if (e.nButton == 2) // Right mouse button
+                {
+                    VisualsContextMenu.Show(Cursor.Position); // Show the context menu at the mouse position
+                }
+            };            
+            KaraokeOverlay = new KaraokeOverlayForm (this)
+            {
+                StartPosition = FormStartPosition.Manual,
+                TopMost = true
+            };            
+            UpdateOverlayPosition();
+            KaraokeOverlay.Show();
+            // Hook into relevant events to keep the overlay aligned
+            this.Resize += (s, e) => UpdateOverlayPosition();
+            this.Move += (s, e) => UpdateOverlayPosition();
+            MediaPlayer.Resize += (s, e) => UpdateOverlayPosition();
 
             for (var i = 0; i < 5; i++)
             {
@@ -278,6 +317,41 @@ namespace cPlayer
             DeleteUsedFiles();
             CreateHiddenFolder();
             ActiveSongData = new SongData();
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
+            this.UpdateStyles();
+        }               
+
+        private bool MonitorApplicationFocus()
+        {
+            IntPtr foregroundWindow = GetForegroundWindow();
+            GetWindowThreadProcessId(foregroundWindow, out uint foregroundProcessId);
+            uint currentProcessId = (uint)Process.GetCurrentProcess().Id;
+
+            if (foregroundProcessId != currentProcessId)
+            {
+                // Application is not focused, hide the overlay if visible
+                return false;
+            }
+            else //(foregroundProcessId == currentProcessId)
+            {
+                // Application is focused, show the overlay if hidden                    
+                return true;
+            }
+        }
+
+        private void UpdateOverlayPosition()
+        {
+            if (KaraokeOverlay != null && !KaraokeOverlay.IsDisposed)
+            {
+                KaraokeOverlay.Location = new Point(this.Left + picVisuals.Location.X,this.Top + picVisuals.Location.Y);
+                KaraokeOverlay.Size = picVisuals.ClientSize;
+            }
+            if (GIFOverlay != null && !GIFOverlay.IsDisposed)
+            {
+                // Position the overlay so it is centered on the ListView
+                GIFOverlay.Left = Left + panelPlaylist.Left + ((panelPlaylist.Width - GIFOverlay.Width) / 2);
+                GIFOverlay.Top = Top + panelPlaylist.Top + ((panelPlaylist.Height - GIFOverlay.Height) / 2);
+            }
         }
 
         private void SetDefaultPaths()
@@ -390,6 +464,8 @@ namespace cPlayer
             PlayingSong = null;
             Text = AppName;
             DeleteUsedFiles();
+            Tools.DeleteFile(activeM4AFile);
+            activeM4AFile = "";
             Log("Created new " + PlayerConsole + " playlist");
         }
 
@@ -451,11 +527,12 @@ namespace cPlayer
             {
                 SongsToAdd.AddRange(files.Where(file => VariousFunctions.ReadFileType(file) == XboxFileType.STFS).ToList());
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
                 SongsToAdd.AddRange(files.Where(file => Path.GetFileName(file) == "song.ini").ToList());
                 SongsToAdd.AddRange(files.Where(file => Path.GetFileName(file) == "songs.dta").ToList());
                 SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == ".sng").ToList());
+                SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == ".yargsong").ToList());
             }
             else if (pS3.Checked)
             {
@@ -480,7 +557,7 @@ namespace cPlayer
             }
             else if (powerGig.Checked)
             {
-                SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == "xml").ToList());
+                SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == ".xml").ToList());
             }
 
             if (!SongsToAdd.Any())
@@ -506,8 +583,42 @@ namespace cPlayer
         private void EnableDisable(bool enabled, bool hide = false)
         {
             fileToolStripMenuItem.Enabled = enabled && !isScanning;
-            picWorking.Visible = (!hide && !enabled) || isScanning;
+            toolsToolStripMenuItem.Enabled = fileToolStripMenuItem.Enabled;
+            optionsToolStripMenuItem.Enabled = fileToolStripMenuItem.Enabled;
+            helpToolStripMenuItem.Enabled = fileToolStripMenuItem.Enabled;
+            var working = (!hide && !enabled) || isScanning;
+            /*if (working)
+            {
+                InitiateGIFOverlay();
+            }
+            else if (GIFOverlay != null)
+            {
+                GIFOverlay.Close();
+                GIFOverlay = null;
+            }*/
             txtSearch.Enabled = enabled && !isScanning;
+        }
+
+        private void InitiateGIFOverlay()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(InitiateGIFOverlay));
+                return;
+            }
+
+            GIFOverlay = new gifOverlay(this)
+            {
+                StartPosition = FormStartPosition.Manual,
+                TopMost = true,
+                Width = 100, // Set overlay size
+                Height = 100,
+                Owner = this
+            };
+
+            UpdateOverlayPosition();
+
+            GIFOverlay.Start();
         }
 
         private bool ValidateDTAFile(string file, bool message)
@@ -680,7 +791,7 @@ namespace cPlayer
 
                 if (File.Exists(yarg))
                 {
-                    if (!nautilus.DecY(yarg, C3Tools.DecryptMode.ToMemory))
+                    if (!nautilus.DecY(yarg, DecryptMode.ToMemory))
                     {
                         if (message)
                         {
@@ -694,7 +805,7 @@ namespace cPlayer
                 else
                 {
                     var mData = File.ReadAllBytes(audioPath);
-                    if (!nautilus.DecM(mData, true, false, true, C3Tools.DecryptMode.ToMemory))
+                    if (!nautilus.DecM(mData, false, true, DecryptMode.ToMemory))
                     {
                         if (message)
                         {
@@ -811,9 +922,18 @@ namespace cPlayer
             return false;
         }
 
-        private void loadINI(string INI, bool message = false, bool scanning = true, bool next = false, bool prep = false)
+        private void loadINI(string input, bool message = false, bool scanning = true, bool next = false, bool prep = false)
         {
-            Log("Loading INI file " + INI);
+            var INI = "";
+            if (Path.GetExtension(input) == ".yargsong")
+            {
+                INI = DecryptExtractYARG(input, message, scanning, next, prep);
+            }
+            else if (Path.GetExtension(input) == ".fnf")
+            {
+                INI = input;
+            }
+            Log("Loading INI file " + input);
             if (!ValidateINIFile(INI, message))
             {
                 Log("Failed to validate that INI file, skipping");
@@ -824,7 +944,7 @@ namespace cPlayer
             var song = Parser.Songs[0];
             Log("Processing song '" + song.Artist + " - " + song.Name + "'");
             Log("It's YARG / CH / PS or FNF playlist - processing as that type of song");
-
+            
             NextSongArtPNG = Path.GetDirectoryName(INI) + "\\album.png";
             NextSongArtJPG = Path.GetDirectoryName(INI) + "\\album.jpg";
             var notesMIDI = Path.GetDirectoryName(INI) + "\\notes.mid";
@@ -841,8 +961,9 @@ namespace cPlayer
 
             oggFiles = Directory.GetFiles(Path.GetDirectoryName(INI), "*.ogg", SearchOption.TopDirectoryOnly);
             opusFiles = Directory.GetFiles(Path.GetDirectoryName(INI), "*.opus", SearchOption.TopDirectoryOnly);
+            m4aFiles = Directory.GetFiles(Path.GetDirectoryName(INI), "*.m4a", SearchOption.TopDirectoryOnly);
 
-            if (!oggFiles.Any() && !opusFiles.Any())
+            if (!oggFiles.Any() && !opusFiles.Any() && !m4aFiles.Any())
             {
                 if (message)
                 {
@@ -853,11 +974,23 @@ namespace cPlayer
             }
             Log("MIDI - " + NextSongMIDI);
             var audio = opusFiles.Any() ? opusFiles.Aggregate("", (current, opus) => current + " " + Path.GetFileName(opus)) : oggFiles.Aggregate("", (current, ogg) => current + " " + Path.GetFileName(ogg));
+            if (m4aFiles.Any())
+            {
+                foreach (var m4a in m4aFiles)
+                {
+                    if (Path.GetFileName(m4a) != "preview.m4a")
+                    {
+                        audio = m4a;
+                        break;
+                    }
+                }
+            }
             Log("Audio - " + audio);
             Log("Art - " + (File.Exists(NextSongArtPNG) ? NextSongArtPNG : NextSongArtJPG));
 
             Song newSong;
             if (!ValidateNewSong(song, 0, string.IsNullOrEmpty(sngPath) ? INI : sngPath, scanning, message, out newSong)) return;
+            newSong.Location = input;//for .yargsong files
 
             if (CancelWorkers) return;
             try
@@ -933,7 +1066,14 @@ namespace cPlayer
                 }
                 Log("Song length: " + newSong.Length);
 
-                if (!scanning) return;
+                if (!scanning)
+                {           
+                    if (m4aFiles.Any())
+                    {
+                        PrepareFortniteM4A();
+                    }
+                    return;
+                }
 
                 Playlist.Add(newSong);
                 Log("Added '" + newSong.Artist + " - " + newSong.Name + "' to playlist");
@@ -949,7 +1089,53 @@ namespace cPlayer
                 {
                     MessageBox.Show("Error reading that file:\n" + ex.Message, AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
+            }            
+        }
+
+        private void PrepareFortniteM4A()
+        {
+            var audio = "";
+            activeM4AFile = "";
+            foreach (var m4a in m4aFiles)
+            {
+                if (Path.GetFileName(m4a) != "preview.m4a")
+                {
+                    audio = m4a;
+                    break;
+                }
             }
+            Bass.BASS_ChannelFree(BassStream);
+            BassStream = fnfParser.m4aToBassStream(audio, 10);//always 10 channels, no preview allowed here
+            if (BassStream == 0)
+            {
+                MessageBox.Show("File '" + audio + "' is not a valid input file", Text, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                Bass.BASS_ChannelFree(BassStream);
+                return;
+            }
+
+            var tempFile = Path.GetTempFileName();
+
+            //this next bit is an ugly hack but temporary until Ian @ BASS implements a better solution
+            //writes the raw opus data to a temporary wav file (fastest encoder) and then reads it back in the StartPlayback function
+            BassEnc.BASS_Encode_Start(BassStream, tempFile, BASSEncode.BASS_ENCODE_PCM | BASSEncode.BASS_ENCODE_AUTOFREE, null, IntPtr.Zero);
+            while (true)
+            {
+                var buffer = new byte[20000];
+                var c = Bass.BASS_ChannelGetData(BassStream, buffer, buffer.Length);
+                if (c <= 0) break;
+            }
+            Bass.BASS_ChannelFree(BassStream);
+
+            BassStream = Bass.BASS_StreamCreateFile(tempFile, 0L, 0L, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
+            if (BassStream == 0)
+            {
+                MessageBox.Show("That is not a valid .m4a input file", Text, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                File.Delete(tempFile);
+                Bass.BASS_ChannelFree(BassStream);
+                return;
+            }
+
+            activeM4AFile = tempFile;
         }
 
         private void ProcessMogg(bool scanning, long in_length, string file, out long Length)
@@ -1117,7 +1303,7 @@ namespace cPlayer
                     }
 
                     if (CancelWorkers) return;
-                    if (!nautilus.DecM(mData, true, false, true, C3Tools.DecryptMode.ToMemory))
+                    if (!nautilus.DecM(mData, false, true, DecryptMode.ToMemory))
                     {
                         if (message && Parser.Songs.Count == 1)
                         {
@@ -1198,9 +1384,16 @@ namespace cPlayer
                 Log("loadCON: " + SongsToAdd[0]);
                 loadCON(SongsToAdd[0], !isScanning);
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
-                if (Path.GetExtension(SongsToAdd[0]) == ".sng")
+                if (Path.GetExtension(SongsToAdd[0]) == ".yargsong")
+                {
+                    pkgPath = "";
+                    sngPath = SongsToAdd[0];
+                    Log("DecryptExtractYARG: " + SongsToAdd[0]);
+                    loadINI(SongsToAdd[0], !isScanning);
+                }
+                else if (Path.GetExtension(SongsToAdd[0]) == ".sng")
                 {
                     sngPath = SongsToAdd[0];
                     Log("loadSNG: " + SongsToAdd[0]);
@@ -1754,8 +1947,8 @@ namespace cPlayer
             var sngFiles = Directory.GetFiles(sngFolder, "*.sng");
             var HSAN = "";
 
-            bool hasBass = false;
-            bool hasLead = false;
+            //bool hasBass = false;
+            //bool hasLead = false;
             bool hasRhythm = false;
             bool hasVocals = false;
             
@@ -1781,8 +1974,8 @@ namespace cPlayer
                     if (ddsFiles[i].Contains("256"))
                     {
                         album_art = ddsFiles[i];
-                    }
-                    break;
+                        break;
+                    }                    
                 }
             }
 
@@ -1792,11 +1985,11 @@ namespace cPlayer
                 {
                     if (sng.Contains("_bass.sng"))
                     {
-                        hasBass = true;
+                        //hasBass = true;
                     }
                     else if (sng.Contains("_lead.sng"))
                     {
-                        hasLead = true;
+                        //hasLead = true;
                     }
                     else if (sng.Contains("_rhythm.sng"))
                     {
@@ -2102,9 +2295,16 @@ namespace cPlayer
                 Log("loadCON: " + SongToLoad);
                 loadCON(SongToLoad, true);
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
-                if (Path.GetExtension(SongToLoad) == ".sng")
+                if (Path.GetFileName(SongToLoad) == ".yargsong")
+                {
+                    sngPath = SongToLoad;
+                    pkgPath = "";
+                    Log("DecryptExtractYARG: " + SongToLoad);
+                    loadINI(SongToLoad, true);
+                }
+                else if (Path.GetExtension(SongToLoad) == ".sng")
                 {
                     sngPath = SongToLoad;
                     Log("loadSNG: " + SongToLoad);
@@ -2177,6 +2377,11 @@ namespace cPlayer
             ReloadPlaylist(Playlist, false);
             isScanning = false;
             UpdateNotifyTray();
+            if (GIFOverlay != null)
+            {
+                GIFOverlay.Close();
+                GIFOverlay = null;
+            }
             consoleToolStripMenuItem.Enabled = true;
             EnableDisable(true);
             CancelWorkers = false;
@@ -2264,7 +2469,7 @@ namespace cPlayer
 
         private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (picWorking.Visible)
+            if (GIFOverlay != null)
             {
                 Log("User tried to close program - please wait until the current process finishes");
                 MessageBox.Show("Please wait until the current process finishes", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -2305,7 +2510,7 @@ namespace cPlayer
             {
                 Tools.DeleteFile(NextSongMIDI);
             }
-            if (!phaseShift.Checked && !fortNite.Checked && rockSmith.Checked && !guitarHero.Checked)
+            if (!yarg.Checked && !fortNite.Checked && rockSmith.Checked && !guitarHero.Checked)
             {
                 Tools.DeleteFile(NextSongArtPNG);
             }
@@ -2315,7 +2520,7 @@ namespace cPlayer
             {
                 Tools.DeleteFile(CurrentSongMIDI);
             }
-            if (!phaseShift.Checked)
+            if (!yarg.Checked)
             {
                 Tools.DeleteFile(CurrentSongArt);
             }
@@ -2336,7 +2541,7 @@ namespace cPlayer
 
         private void lstPlaylist_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lstPlaylist.SelectedItems.Count == 0 || picWorking.Visible) return;
+            if (lstPlaylist.SelectedItems.Count == 0 || GIFOverlay != null) return;
             GetActiveSong(lstPlaylist.SelectedItems[0].SubItems[0]);
         }
 
@@ -2715,13 +2920,13 @@ namespace cPlayer
         {
             if (btnPlayPause.Tag.ToString() != "pause") return;
             PlaybackTimer.Enabled = false;
-            StopPlayback();
+            StopPlayback();            
             StartPlayback(doFade, false);
         }
 
         private int ShuffleSongs(bool can_repeat = false)
         {
-            Log("Shuffing songs");
+            Log("Shuffling songs");
             var random = new Random();
             int index;
             do
@@ -2785,9 +2990,15 @@ namespace cPlayer
                 Log("loadCON: " + ActiveSong.Location);
                 loadCON(ActiveSong.Location, false, false, false, true);
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
-                if (Path.GetExtension(ActiveSong.Location) == ".sng")
+                if (Path.GetExtension(ActiveSong.Location) == ".yargsong")
+                {
+                    sngPath = ActiveSong.Location;
+                    Log("loadINI: " + ActiveSong.Location);
+                    loadINI(ActiveSong.Location, false, false, false, true);
+                }
+                else if (Path.GetExtension(ActiveSong.Location) == ".sng")
                 {
                     sngPath = ActiveSong.Location;
                     Log("loadSNG: " + ActiveSong.Location);
@@ -2849,7 +3060,7 @@ namespace cPlayer
                     loadDTA(ActiveSong.Location, false, false, false, true);
                 }
             }
-            if (phaseShift.Checked)
+            if (yarg.Checked)
             {
                 GetIntroOutroSilencePS();
             }
@@ -2867,6 +3078,11 @@ namespace cPlayer
             MoveSongFiles();
             isScanning = batchSongLoader.IsBusy || songLoader.IsBusy;
             UpdateNotifyTray();
+            if (GIFOverlay != null)
+            {
+                GIFOverlay.Close();
+                GIFOverlay = null;
+            }
             PrepareForPlayback();
             UpdateHighlights();
         }
@@ -2874,7 +3090,7 @@ namespace cPlayer
         private void PrepareForPlayback() //mainly for GHWT:DE
         {
             Log("Preparing for playback");
-            if ((!phaseShift.Checked && !fortNite.Checked && !guitarHero.Checked && !powerGig.Checked && !bandFuse.Checked) && (CurrentSongAudio == null || CurrentSongAudio.Length == 0))
+            if ((!yarg.Checked && !fortNite.Checked && !guitarHero.Checked && !powerGig.Checked && !bandFuse.Checked) && (CurrentSongAudio == null || CurrentSongAudio.Length == 0))
             {
                 if (AlreadyTried)
                 {
@@ -3584,7 +3800,7 @@ namespace cPlayer
 
         private void lstPlaylist_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (lstPlaylist.SelectedItems.Count != 1 || (picWorking.Visible && !AlreadyTried)) return;
+            if (lstPlaylist.SelectedItems.Count != 1 || (GIFOverlay != null && !AlreadyTried)) return;
             if (songPreparer.IsBusy) return;
             Log("lstPlaylist_MouseDoubleClick");
             doSongPreparer();
@@ -3593,11 +3809,15 @@ namespace cPlayer
         private void MoveSongFiles()
         {                
             Tools.MoveFile(NextSongArtBlurred, CurrentSongArtBlurred);
-            if (phaseShift.Checked || fortNite.Checked || guitarHero.Checked)
+            if (yarg.Checked || fortNite.Checked || guitarHero.Checked)
             {
                 CurrentSongArt = File.Exists(NextSongArtPNG) ? NextSongArtPNG : NextSongArtJPG;
                 CurrentSongMIDI = NextSongMIDI;
-                CurrentSongAudioPath = NextSongAudioPath;
+                //CurrentSongAudioPath = NextSongAudioPath;
+                nautilus.PlayingSongOggData = nautilus.NextSongOggData;
+                nautilus.NextSongOggData = new byte[0];
+                nautilus.ReleaseStreamHandle(true);
+                CurrentSongAudio = nautilus.PlayingSongOggData;
                 return;
             }            
             Tools.MoveFile(NextSongArtPNG, CurrentSongArt);
@@ -3729,7 +3949,14 @@ namespace cPlayer
                 //add entry to playlist panel
                 var entry = new ListViewItem(index);
                 entry.SubItems.Add(CleanArtistSong(playlist[i].Artist + " - " + CleanArtistSong(playlist[i].Name)));
-                entry.SubItems.Add(Parser.GetSongDuration(playlist[i].Length.ToString(CultureInfo.InvariantCulture)));
+                if (playlist[i].Length == 0)
+                {
+                    entry.SubItems.Add("");//we don't have song duration for Fornite Festival m4a files so blank it out at this point
+                }
+                else
+                {
+                    entry.SubItems.Add(Parser.GetSongDuration(playlist[i].Length.ToString(CultureInfo.InvariantCulture)));
+                }                
                 entry.Tag = 0; //not played
                 lstPlaylist.Items.Add(entry);
             }
@@ -3995,10 +4222,9 @@ namespace cPlayer
                 MessageBox.Show("Can't find that playlist file!", AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (!picWorking.Visible)
+            if (GIFOverlay == null)
             {
-                picWorking.Visible = true;
-                picWorking.Refresh();
+                InitiateGIFOverlay();
                 showWait = true;
             }
             var error = false;
@@ -4029,8 +4255,8 @@ namespace cPlayer
                         case "ps3":
                             pS3.PerformClick();
                             break;
-                        case "phaseshift":
-                            phaseShift.PerformClick();
+                        case "yarg":
+                            yarg.PerformClick();
                             break;
                         case "rocksmith":
                             rockSmith.PerformClick();
@@ -4137,8 +4363,11 @@ namespace cPlayer
                 {
                     if (showWait)
                     {
-                        picWorking.Visible = false;
-                        picWorking.Refresh();
+                        if (GIFOverlay != null)
+                        {
+                            GIFOverlay.Close();
+                            GIFOverlay = null;
+                        }
                     }
                     const string msg = "Some of the song entries in that playlist were corrupt or in a format I wasn't expecting\nPlease don't modify the playlist files manually\n\nUnfortunately I wasn't able to recover any songs :-(\n\nSee the log file to track down the problem song(s)";
                     Log(msg);
@@ -4150,8 +4379,11 @@ namespace cPlayer
             {
                 if (showWait)
                 {
-                    picWorking.Visible = false;
-                    picWorking.Refresh();
+                    if (GIFOverlay != null)
+                    {
+                        GIFOverlay.Close();
+                        GIFOverlay = null;
+                    }
                 }
                 Log("Nothing could be loaded from that playlist");
                 MessageBox.Show("Nothing could be loaded from that playlist", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
@@ -4165,8 +4397,11 @@ namespace cPlayer
             Text = AppName + " - " + PlaylistName;
             if (showWait)
             {
-                picWorking.Visible = false;
-                picWorking.Refresh();
+                if (GIFOverlay != null)
+                {
+                    GIFOverlay.Close();
+                    GIFOverlay = null;
+                }
             }
             if (lstPlaylist.Items.Count == 0 || songExtractor.IsBusy || !autoPlay.Checked) return;
             if (autoPlay.Checked && btnShuffle.Tag.ToString() == "shuffle")
@@ -4292,7 +4527,7 @@ namespace cPlayer
                 xbox360.Checked = false;
                 pS3.Checked = false;
                 wii.Checked = false;
-                phaseShift.Checked = false;
+                yarg.Checked = false;
                 rockSmith.Checked = false;
                 guitarHero.Checked = false;
                 fortNite.Checked = false;
@@ -4312,9 +4547,9 @@ namespace cPlayer
                         wii.Checked = true;
                         consoleToolStripMenuItem.Text = "Your console: Wii (Rock Band)";
                         break;
-                    case "phaseshift":
-                        phaseShift.Checked = true;
-                        consoleToolStripMenuItem.Text = "Your console: PC (YARG / CH / PS)";
+                    case "yarg":
+                        yarg.Checked = true;
+                        consoleToolStripMenuItem.Text = "Your console: PC (YARG / Clone Hero)";
                         break;
                     case "rocksmith":
                         rockSmith.Checked = true;
@@ -4403,6 +4638,7 @@ namespace cPlayer
                 doMIDINameProKeys = sr.ReadLine().Contains("True");
                 doMIDINameVocals = sr.ReadLine().Contains("True");
                 displayBackgroundVideo.Checked = sr.ReadLine().Contains("True");
+                playBGVideos.Checked = displayBackgroundVideo.Checked;
                 if (sr.ReadLine().Contains("True"))
                 {
                     WindowState = FormWindowState.Maximized;
@@ -4430,7 +4666,7 @@ namespace cPlayer
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var version = GetAppVersion();
-            var message = AppName + " - The Rock Band Music Player\nVersion: " + version + "\n© TrojanNemo, 2014-2024\n\n";
+            var message = AppName + " - The Rock Band Music Player\nVersion: " + version + " (Dark Edition)\n© TrojanNemo, 2014-2024\n\n";
             var credits = Tools.ReadHelpFile("credits");
             MessageBox.Show(message + credits, "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
             Log("Displayed About message");
@@ -4559,9 +4795,15 @@ namespace cPlayer
                 Log("loadCON: " + NextSong.Location);
                 loadCON(NextSong.Location, false, false, true);
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
-                if (Path.GetExtension(NextSong.Location) == ".sng")
+                if (Path.GetExtension(NextSong.Location) == ".yargsong")
+                {
+                    sngPath = NextSong.Location;
+                    Log("DecryptExtractYARG: " + NextSong.Location);
+                    loadINI(NextSong.Location, false, false, true);
+                }
+                else if (Path.GetExtension(NextSong.Location) == ".sng")
                 {
                     NextSong.yargPath = "";
                     sngPath = NextSong.Location;
@@ -4625,7 +4867,7 @@ namespace cPlayer
                 }
             }
 
-            if (phaseShift.Checked)
+            if (yarg.Checked)
             {
                 GetIntroOutroSilencePS();
             }
@@ -4635,6 +4877,52 @@ namespace cPlayer
             }
         }
 
+        private string DecryptExtractYARG(string inFile, bool message = false, bool scanning = true, bool next = false, bool prep = false)
+        {
+            byte[] SNGPKG = { (byte)'S', (byte)'N', (byte)'G', (byte)'P', (byte)'K', (byte)'G' };
+            var tempFolder = Application.StartupPath + "\\bin\\temp";
+            var tempFile = tempFolder + "\\temp.sng";
+            Tools.DeleteFolder(tempFolder, true);
+            if (!Directory.Exists(tempFolder))
+            {
+                Directory.CreateDirectory(tempFolder);
+            }
+            using (FileStream fileStream = File.OpenRead(inFile))
+            {
+                YARGSongFileStream yargFileStream = TryLoad(fileStream);
+                byte[] bytes = new byte[yargFileStream.Length];
+                yargFileStream.Read(bytes, 0, bytes.Length);
+                yargFileStream.Close();
+                using (var fs = File.Create(tempFile))
+                {
+                    using (var bw = new BinaryWriter(fs))
+                    {
+                        bw.Write(bytes);
+                    }
+                }
+            }
+            using (FileStream fileStream = new FileStream(tempFile, FileMode.Open, FileAccess.Write))
+            {
+                fileStream.Write(SNGPKG, 0, SNGPKG.Length);
+            }
+            if (!Tools.ExtractSNG(tempFile, tempFolder))
+            {
+                Tools.DeleteFile(tempFile);
+                if (message)
+                {
+                    var choice = MessageBox.Show("Decrypting YARG .yargsong files requires .NET Desktop Runtime 7\n\nIf you already have .NET Desktop Runtime 7 installed and it still doesn't work, notify Nemo\n\nIf you don't have .NET Desktop Runtime 7 installed, click OK to go to the Microsoft website and download it from there\n\nOr Click Cancel to go back", Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation);
+                    if (choice == DialogResult.OK)
+                    {
+                        Process.Start("https://dotnet.microsoft.com/en-us/download/dotnet/7.0");
+                    }
+                }
+                return "";
+            }
+            var ini = Directory.GetFiles(tempFolder, "song.ini", SearchOption.AllDirectories);
+            Tools.DeleteFile(tempFile);
+            return ini[0];            
+        }
+
         private void songExtractor_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Log("Song extractor finished");
@@ -4642,7 +4930,11 @@ namespace cPlayer
             UpdateNotifyTray();
             btnLoop.Enabled = true;
             btnShuffle.Enabled = true;
-            picWorking.Visible = false;
+            if (GIFOverlay != null)
+            {
+                GIFOverlay.Close();
+                GIFOverlay = null;
+            }
             if (PlayingSong.Index <= lstPlaylist.Items.Count - 1)
             {
                 lstPlaylist.Items[PlayingSong.Index].Selected = false;
@@ -4655,7 +4947,7 @@ namespace cPlayer
             lstPlaylist.Items[NextSongIndex].Selected = true;
             lstPlaylist.Items[NextSongIndex].Focused = true;
             lstPlaylist.EnsureVisible(NextSongIndex);
-            if (!phaseShift.Checked && lstPlaylist.Items.Count > 0)
+            if (!yarg.Checked && lstPlaylist.Items.Count > 0)
             {
                 Log("Next song files not found, processing song files again");
                 lstPlaylist_MouseDoubleClick(null, null);
@@ -4789,6 +5081,15 @@ namespace cPlayer
             lastWordWasDash = line.EndsWith("-", StringComparison.Ordinal);
             return lastWordWasDash;
         }
+                
+        public int GetKaraokeCurrentLineTop()
+        {
+            return (int)(picVisuals.Height * 0.05);
+        }
+        public int GetKaraokeNextLineTop()
+        {
+            return (int)(picVisuals.Height * 0.95);
+        }
 
         private void DoKaraokeMode(Graphics graphics, IList<LyricPhrase> phrases, IEnumerable<Lyric> lyrics)
         {
@@ -4818,8 +5119,8 @@ namespace cPlayer
                 }
                 break;
             }
-            var currentLineTop = (int)(picVisuals.Height * 0.05);
-            var nextLineTop = (int)(picVisuals.Height * 0.95);
+            var currentLineTop = GetKaraokeCurrentLineTop();
+            var nextLineTop = GetKaraokeNextLineTop();
             string lineText;
             Font lineFont;
             Size lineSize;
@@ -4841,38 +5142,119 @@ namespace cPlayer
                     TextRenderer.DrawText(graphics, line2, lineFont, new Point(posX, currentLineTop), Color.LightSkyBlue, KaraokeBackgroundColor);
                 }
 
+                var lyricsList = lyrics.ToList();
+                var wordList = new List<ActiveWord>();
                 if (currentLine.PhraseStart <= time - 0.1)
                 {
-                    //get all words from current phrase that have been sung (includes more than line2 above because we want full words now
-                    var line3 = "";
-                    var pending = false;
-                    foreach (var lyric in lyrics.Where(lyric => !(lyric.LyricStart < currentLine.PhraseStart)))
-                    {
-                        if (lyric.LyricStart > time + 0.1)
-                        {
-                            if (pending)
-                            {
-                                line3 += " " + lyric.LyricText;
-                                pending = IsMiddleOfWord(lyric.LyricText);
-                                continue;
-                            }
-                            break;
-                        }
-                        line3 += " " + lyric.LyricText;
-                        pending = IsMiddleOfWord(lyric.LyricText);
-                    }
-                    var words = ProcessLine(line3, true).Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                    var word = "";
+                    double wordStart = 0, wordEnd = 0;
+                    var activeWord = new ActiveWord(word, wordStart, wordEnd);
 
-                    if (words.Any())
+                    for (int i = 0; i < lyricsList.Count(); i++)
                     {
-                        var activeWord = words[words.Count() - 1];
-                        //draw current word being sung - big in the middle of the screen
-                        lineFont = new Font("Tahoma", GetScaledFontSize(graphics, activeWord, new Font("Tahoma", (float)12.0), 200));
-                        lineSize = TextRenderer.MeasureText(activeWord, lineFont);
-                        posX = (picVisuals.Width - lineSize.Width) / 2;
-                        TextRenderer.DrawText(graphics, activeWord, lineFont, new Point(posX, (picVisuals.Height - lineSize.Height) / 2), Color.WhiteSmoke, KaraokeBackgroundColor);
+                        var lyric = lyricsList[i];
+
+                        // Skip lyrics outside the proper time
+                        if (lyric.LyricStart < currentLine.PhraseStart || lyric.LyricStart > currentLine.PhraseEnd)
+                        {
+                            continue;
+                        }
+                        if (string.IsNullOrEmpty(word))
+                        {
+                            wordStart = lyric.LyricStart;
+                        }
+                        if (lyric.LyricText.Contains("-")) //is a syllable
+                        {
+                            word += ProcessLine(lyric.LyricText, true);
+                            wordEnd = lyric.LyricStart + lyric.LyricDuration;                          
+                            continue;
+                        }
+                        // Handle sustains
+                        else if (!string.IsNullOrEmpty(word) && lyric.LyricText.Contains("+"))
+                        {
+                            //word += "+";
+                            wordEnd = lyric.LyricStart + lyric.LyricDuration;
+
+                            // Extend for consecutive sustains
+                            for (var a = i + 1; a < lyricsList.Count; a++)
+                            {
+                                if (lyricsList[a].LyricText.Contains("+"))
+                                {
+                                    //word += "+"; // Append the sustain
+                                    wordEnd = lyricsList[a].LyricStart + lyricsList[a].LyricDuration;
+                                    i = a; // Update `i` to skip processed sustain notes
+                                }
+                                else
+                                {
+                                    break; // Exit sustain processing
+                                }
+                            }
+                            continue; // Continue to process the next lyric
+                        }
+                        else
+                        {
+                            // Append regular lyrics to the word
+                            word += ProcessLine(lyric.LyricText, true);
+                            wordEnd = lyric.LyricStart + lyric.LyricDuration;
+
+                            //look ahead to double check next lyric(s) aren't + sustains
+                            for (var z = i + 1; z < lyricsList.Count - i - 1; z++)
+                            {
+                                if (lyricsList[z].LyricText.Contains("+"))
+                                {
+                                    //word += "+"; // Append the sustain
+                                    wordEnd = lyricsList[z].LyricStart + lyricsList[z].LyricDuration;
+                                    i = z;
+                                    continue;
+                                }
+                                else
+                                {
+                                    i = z - 1;
+                                    break;
+                                }
+                            }
+
+                            // Finalize the word if it’s not a middle syllable
+                            if (!string.IsNullOrEmpty(word))
+                            {
+                                wordList.Add(new ActiveWord(word.Trim(), wordStart, wordEnd));
+                                word = ""; // Reset the word
+                            }
+                        }
                     }
-                }
+
+                    // Find the active word matching playback time
+                    activeWord = wordList.FirstOrDefault(w => w.WordStart <= time && w.WordEnd > time);
+
+                    if (activeWord != null && !string.IsNullOrEmpty(activeWord.Text))
+                    {
+                        // Measure the word size for centering
+                        lineFont = new Font("Tahoma", GetScaledFontSize(graphics, activeWord.Text, new Font("Tahoma", (float)12.0), 200));
+                        lineSize = TextRenderer.MeasureText(activeWord.Text, lineFont);
+                        posX = (picVisuals.Width - lineSize.Width) / 2;
+                        var posY = (picVisuals.Height - lineSize.Height) / 2;
+
+                        // Draw the entire word in white
+                        TextRenderer.DrawText(graphics, activeWord.Text, lineFont, new Point(posX, posY), Color.WhiteSmoke, KaraokeBackgroundColor);
+                        
+                        // Calculate progress for the sung portion
+                        var timeElapsed = time - activeWord.WordStart;
+                        var progress = Clamp((float)(timeElapsed / (activeWord.WordEnd - activeWord.WordStart)), 0.0f, 1.0f);
+
+                        // Determine the portion of the word to highlight
+                        var numCharsToHighlight = (int)Math.Ceiling(progress * activeWord.Text.Length); // Ensure rounding up
+                        numCharsToHighlight = Math.Min(numCharsToHighlight, activeWord.Text.Length);
+
+                        // Extract the sung portion
+                        var sungPortion = activeWord.Text.Substring(0, numCharsToHighlight);
+
+                        // Overlay the sung portion in blue
+                        if (!string.IsNullOrEmpty(sungPortion))
+                        {
+                            TextRenderer.DrawText(graphics, sungPortion, lineFont, new Point(posX, posY), Color.LightSkyBlue, KaraokeBackgroundColor);                            
+                        }
+                    }
+                }                
             }
             if (nextLine != null && !string.IsNullOrEmpty(nextLine.PhraseText))
             {
@@ -4910,7 +5292,14 @@ namespace cPlayer
             TextRenderer.DrawText(graphics, middleText, lineFont, new Point(posX, (picVisuals.Height - lineSize.Height) / 2), textColor, KaraokeBackgroundColor);
         }
 
-        private float GetScaledFontSize(Graphics g, string line, Font PreferedFont, float maxSize)
+        public float Clamp(float value, float min, float max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
+
+        public float GetScaledFontSize(Graphics g, string line, Font PreferedFont, float maxSize)
         {
             var maxWidth = picVisuals.Width * 0.95;
             var RealSize = g.MeasureString(line, PreferedFont);
@@ -4953,6 +5342,15 @@ namespace cPlayer
         private void UpdateConsole(object sender, EventArgs e)
         {
             if (songLoader.IsBusy || batchSongLoader.IsBusy) return;
+            if (Text.Contains("*"))
+            {
+                if (MessageBox.Show("You have unsaved changes on the current playlist\nAre you sure you want to do that?",
+                    AppName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
+
             var sentBy = (ToolStripMenuItem)sender;
             string newConsole;
             if (sentBy == xbox360)
@@ -4971,10 +5369,10 @@ namespace cPlayer
                 newConsole = "wii";
                 consoleToolStripMenuItem.Text = "Your console: Wii (Rock Band)";
             }
-            else if (sentBy == phaseShift)
+            else if (sentBy == yarg)
             {
-                newConsole = "phaseshift";
-                consoleToolStripMenuItem.Text = "Your console: PC (YARG / CH / PS)";
+                newConsole = "yarg";
+                consoleToolStripMenuItem.Text = "Your console: PC (YARG / Clone Hero)";
             }
             else if (sentBy == rockSmith)
             {
@@ -4989,7 +5387,7 @@ namespace cPlayer
             else if (sentBy == fortNite)
             {
                 newConsole = "fortnite";
-                consoleToolStripMenuItem.Text = "Your console: PC (Fornite Festival)";
+                consoleToolStripMenuItem.Text = "Your console: PC (Fortnite Festival)";
             }
             else if (sentBy == powerGig)
             {
@@ -5011,7 +5409,7 @@ namespace cPlayer
             xbox360.Checked = sentBy == xbox360;
             pS3.Checked = sentBy == pS3;
             wii.Checked = sentBy == wii;
-            phaseShift.Checked = sentBy == phaseShift;
+            yarg.Checked = sentBy == yarg;
             rockSmith.Checked = sentBy == rockSmith;
             guitarHero.Checked = sentBy == guitarHero;
             fortNite.Checked = sentBy == fortNite;
@@ -5024,7 +5422,7 @@ namespace cPlayer
         private void PlaybackTimer_Tick(object sender, EventArgs e)
         {
             try
-            {
+            {                
                 if (Bass.BASS_ChannelIsActive(BassMixer) == BASSActive.BASS_ACTIVE_PLAYING)
                 {
                     // the stream is still playing...                    
@@ -5062,11 +5460,38 @@ namespace cPlayer
                     {
                         picPreview.Invalidate();
                     }
-                    picVisuals.Invalidate();
+                    if (displayBackgroundVideo.Checked && VideoIsPlaying && displayKaraokeMode.Checked)
+                    {
+                        KaraokeOverlay.Visible = MonitorApplicationFocus();
+                        if (KaraokeOverlay.Visible)
+                        {
+                            KaraokeOverlay.Phrases = MIDITools.PhrasesVocals.Phrases;
+                            KaraokeOverlay.Lyrics = MIDITools.LyricsVocals.Lyrics;
+                            KaraokeOverlay.CorrectedTime = GetCorrectedTime();
+                            KaraokeOverlay.Invalidate();
+                        }
+                    }
+                    else
+                    {
+                        KaraokeOverlay.Visible = false;
+                        picVisuals.Invalidate();
+                    }
+                    return;
+                }
+                if (btnLoop.Tag.ToString() == "loop")
+                {
+                    goto GoToNextSong;
+                }
+                else if (btnShuffle.Tag.ToString() != "shuffle")
+                {
+                    GetNextSong();
+                }
+                else
+                {
                     return;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return;
             }
@@ -5092,7 +5517,7 @@ namespace cPlayer
         private void DoLoop()
         {
             PlaybackTimer.Enabled = false;
-            StopPlayback(true);
+            StopPlayback();
             PlaybackSeconds = 0;
             StartPlayback(true, false);
         }
@@ -5178,26 +5603,53 @@ namespace cPlayer
             }
         }
 
-        private bool PrepMixerRB3()
+        private bool PrepMixerRB3(bool isM4A = false)
         {
             Log("Preparing audio mixer using RB3 mogg file");
             BassStreams.Clear();
             try
             {
-                //BassStream = Bass.BASS_StreamCreateFile(oggPath, 0, 0, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
-                BassStream = Bass.BASS_StreamCreateFile(nautilus.GetOggStreamIntPtr(), 0L, nautilus.PlayingSongOggData.Length, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
-                BassStreams.Add(BassStream);
+                if(isM4A)
+                {
+                    BassStream = Bass.BASS_StreamCreateFile(activeM4AFile, 0L, 0L, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
+                }
+                else
+                {                    
+                    BassStream = Bass.BASS_StreamCreateFile(nautilus.GetOggStreamIntPtr(), 0L, nautilus.PlayingSongOggData.Length, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
+                    BassStreams.Add(BassStream);
+                }
 
-                // create a decoder for the OGG file(s)
+                // create a decoder for the input file(s)
                 var channel_info = Bass.BASS_ChannelGetInfo(BassStream);
 
-                // create a stereo mixer with same frequency rate as the input file
+                // create a stereo mixer with same frequency rate as the input file(s)
                 BassMixer = BassMix.BASS_Mixer_StreamCreate(channel_info.freq, 2, BASSFlag.BASS_MIXER_END);//BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT | BASSFlag.BASS_MIXER_END);
                 BassMix.BASS_Mixer_StreamAddChannel(BassMixer, BassStream, BASSFlag.BASS_MIXER_MATRIX | BASSFlag.BASS_MIXER_CHAN_BUFFER);
 
+                if (isM4A)
+                {
+                    ActiveSongData.ChannelsDrums = 2;
+                    ActiveSongData.ChannelsBassStart = 0;
+                    ActiveSongData.ChannelsBass = 2;
+                    ActiveSongData.ChannelsBassStart = 2;
+                    ActiveSongData.ChannelsGuitar = 2;
+                    ActiveSongData.ChannelsGuitarStart = 4;
+                    ActiveSongData.ChannelsVocals = 2;
+                    ActiveSongData.ChannelsVocalsStart = 6;
+                    ActiveSongData.ChannelsTotal = 10;
+                    ActiveSongData.AttenuationValues = "";
+                    ActiveSongData.PanningValues = "";
+
+                    var len = Bass.BASS_ChannelGetLength(BassStream);
+                    var totaltime = Bass.BASS_ChannelBytes2Seconds(BassStream, len); // the total time length
+                    ActiveSongData.Length = (int)(totaltime * 1000);
+                    ActiveSong.Length = ActiveSongData.Length;
+                    lblDuration.Text = Parser.GetSongDuration(ActiveSong.Length.ToString(CultureInfo.InvariantCulture));
+                }
+
                 //get and apply channel matrix
                 var matrix = GetChannelMatrix(channel_info.chans);
-                BassMix.BASS_Mixer_ChannelSetMatrix(BassStream, matrix);
+                BassMix.BASS_Mixer_ChannelSetMatrix(BassStream, matrix);                
             }
             catch (Exception ex)
             {
@@ -5210,7 +5662,7 @@ namespace cPlayer
 
         private bool PrepMixerPS(IList<string> audioFiles, out int mixer, out List<int> NextSongStreams)
         {
-            Log("Preparing audio mixer using PS/CH/YARG file(s)");
+            Log("Preparing audio mixer using YARG / Clone Hero file(s)");
             BassStreams.Clear();
             try
             {
@@ -5395,7 +5847,7 @@ namespace cPlayer
             Log("Starting playback");
             if (PlayAudio)
             {
-                if ((!phaseShift.Checked && !fortNite.Checked && !guitarHero.Checked && !powerGig.Checked && !bandFuse.Checked) && (CurrentSongAudio == null || CurrentSongAudio.Length == 0))
+                if ((!yarg.Checked && !fortNite.Checked && !guitarHero.Checked && !powerGig.Checked && !bandFuse.Checked) && (CurrentSongAudio == null || CurrentSongAudio.Length == 0))
                 {
                     if (AlreadyTried || lstPlaylist.SelectedItems.Count == 0)
                     {
@@ -5414,9 +5866,9 @@ namespace cPlayer
                 }
 
                 var directory = Path.GetDirectoryName(PlayingSong.Location);
-                if (phaseShift.Checked && !string.IsNullOrEmpty(sngPath))
+                if (yarg.Checked && !string.IsNullOrEmpty(sngPath))
                 {
-                    directory = Application.StartupPath + "\\temp";
+                    directory = Application.StartupPath + "\\bin\\temp\\";
                 }
                 else if (rockSmith.Checked && !string.IsNullOrEmpty(psarcPath))
                 {
@@ -5432,14 +5884,23 @@ namespace cPlayer
                 }
                 else if (bandFuse.Checked && !string.IsNullOrEmpty(BandFusePath))
                 {
-                    directory = Application.StartupPath + "\\temp";
+                    directory = Application.StartupPath + "\\bin\\temp\\";
                 }
                 oggFiles = Directory.GetFiles(directory, "*.ogg", SearchOption.TopDirectoryOnly);
                 opusFiles = Directory.GetFiles(directory, "*.opus", SearchOption.TopDirectoryOnly);
                 mp3Files = Directory.GetFiles(directory, "*.mp3", SearchOption.TopDirectoryOnly);
                 wavFiles = Directory.GetFiles(directory, "*.wav", SearchOption.TopDirectoryOnly);
 
-                if ((phaseShift.Checked || fortNite.Checked || guitarHero.Checked || powerGig.Checked || bandFuse.Checked) && (oggFiles.Any() || opusFiles.Any() || mp3Files.Any() || wavFiles.Any()))
+                if (fortNite.Checked && !string.IsNullOrEmpty(activeM4AFile))
+                {
+                    if (!PrepMixerRB3(true))
+                    {
+                        MessageBox.Show("Error preparing audio mixer - can't play that song", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        StopPlayback();
+                        return;
+                    }
+                }
+                else if ((yarg.Checked || fortNite.Checked || guitarHero.Checked || powerGig.Checked || bandFuse.Checked) && (oggFiles.Any() || opusFiles.Any() || mp3Files.Any() || wavFiles.Any()))
                 {
                     List<string> AudioFiles;
                     if (opusFiles.Any())
@@ -5499,7 +5960,7 @@ namespace cPlayer
                         MessageBox.Show(msg, AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                         StopPlayback();
                         return;
-                    }
+                    }                
                 }
                 else
                 {
@@ -5508,7 +5969,7 @@ namespace cPlayer
                         if (Path.GetExtension(CurrentSongAudioPath) == ".mogg")
                         {
                             oggPath = CurrentSongAudioPath.Replace(".mogg", ".ogg");
-                            if (!nautilus.DecM(File.ReadAllBytes(CurrentSongAudioPath), true, false, doNext, C3Tools.DecryptMode.ToFile, oggPath))
+                            if (!nautilus.DecM(File.ReadAllBytes(CurrentSongAudioPath), false, doNext, DecryptMode.ToFile, oggPath))
                             {
                                 var msg = "Audio file for '" + PlayingSong.Artist + " - " + PlayingSong.Name + "' is encrypted, can't play it";
                                 Log(msg);
@@ -5520,7 +5981,7 @@ namespace cPlayer
                         else if (Path.GetExtension(CurrentSongAudioPath) == ".yarg_mogg")
                         {
                             oggPath = CurrentSongAudioPath.Replace(".yarg_mogg", ".ogg");
-                            if (!nautilus.DecY(CurrentSongAudioPath, C3Tools.DecryptMode.ToFile, oggPath))
+                            if (!nautilus.DecY(CurrentSongAudioPath, DecryptMode.ToFile, oggPath))
                             {
                                 var msg = "Audio file for '" + PlayingSong.Artist + " - " + PlayingSong.Name + "' is encrypted, can't play it";
                                 Log(msg);
@@ -5530,7 +5991,7 @@ namespace cPlayer
                             }
                             else
                             {
-                                nautilus.RemoveMHeader(File.ReadAllBytes(oggPath), doNext, C3Tools.DecryptMode.ToFile, oggPath);
+                                nautilus.RemoveMHeader(File.ReadAllBytes(oggPath), doNext, DecryptMode.ToFile, oggPath);
                             }
                         }
                     }
@@ -5540,7 +6001,7 @@ namespace cPlayer
                     }
                     if (nautilus.PlayingSongOggData == null || nautilus.PlayingSongOggData.Length == 0)
                     {
-                        if (!nautilus.DecM(CurrentSongAudio, true, false, false, C3Tools.DecryptMode.ToFile, oggPath))
+                        if (!nautilus.DecM(CurrentSongAudio, false, false, DecryptMode.ToFile, oggPath))
                         {
                             var msg = "Audio file for '" + PlayingSong.Artist + " - " + PlayingSong.Name + "' is encrypted, can't play it";
                             Log(msg);
@@ -5584,7 +6045,7 @@ namespace cPlayer
                 }
 
                 //start video playback if possible
-                if (phaseShift.Checked && displayBackgroundVideo.Checked)
+                if (yarg.Checked && displayBackgroundVideo.Checked)
                 {
                     StartVideoPlayback();
                 }
@@ -5610,6 +6071,7 @@ namespace cPlayer
             Log("Video not yet loaded, trying to load");
             MediaPlayer.URL = "";
             var video_path = "";
+            if (string.IsNullOrEmpty(ini) || !File.Exists(ini)) return;
             var sr = new StreamReader(ini);
             while (sr.Peek() >= 0)
             {   //read value for Phase Shift entry in song.ini
@@ -5621,7 +6083,14 @@ namespace cPlayer
             sr.Dispose();
             if (string.IsNullOrEmpty(video_path) || !File.Exists(video_path))
             {
-                var backgrounds = Directory.GetFiles(Path.GetDirectoryName(ini));
+                var path = Path.GetDirectoryName(ini); //default
+                //search for mid file in YARG exCON folder, video should be where the .mid file is
+                var possible_folder = Directory.GetFiles(Path.GetDirectoryName(ini), "*.mid", SearchOption.AllDirectories);
+                if (possible_folder.Any())
+                {
+                    path = Path.GetDirectoryName(possible_folder[0]);
+                }
+                var backgrounds = Directory.GetFiles(path);
                 for (var i = 0; i < backgrounds.Count(); i++)
                 {
                     switch (Path.GetFileName(backgrounds[i]).ToLowerInvariant())
@@ -5736,7 +6205,7 @@ namespace cPlayer
                     Log("Stopping playback");
                     StopVideoPlayback();
                     StopBASS();
-                }
+                }                
             }
             catch (Exception ex)
             {
@@ -5767,7 +6236,7 @@ namespace cPlayer
         }
 
         private void StopBASS()
-        {
+        {            
             Log("Releasing BASS resources");
             try
             {
@@ -5809,7 +6278,7 @@ namespace cPlayer
             return notes;
         }
 
-        private static string ProcessLine(string line, bool clean)
+        public string ProcessLine(string line, bool clean)
         {
             if (line == null) return "";
             string newline;
@@ -5852,13 +6321,13 @@ namespace cPlayer
                 PrepareForDrawing();
             }
             var doShow = openSideWindow.Checked;
-            Width = doShow ? 1000 : 402;
+            Width = doShow ? 1000 : 412;
             lblUpdates.Width = doShow ? 590 : 184;
             lblUpdates.Left = (openSideWindow.Checked? picVisuals.Left + picVisuals.Width : panelPlaying.Left + panelPlaying.Width) - lblUpdates.Width;
             picVisuals.Image = displayAlbumArt.Checked && File.Exists(CurrentSongArtBlurred) ? Tools.NemoLoadImage(CurrentSongArtBlurred) : null;
             lblSections.Parent = picVisuals;
             lblSections.Visible = showPracticeSections.Checked && MIDITools.PracticeSessions.Any();
-            lblSections.BackColor = phaseShift.Checked && displayBackgroundVideo.Checked && !string.IsNullOrEmpty(MediaPlayer.URL) ? Color.Black : LabelBackgroundColor;
+            lblSections.BackColor = yarg.Checked && displayBackgroundVideo.Checked && !string.IsNullOrEmpty(MediaPlayer.URL) ? Color.Black : LabelBackgroundColor;
             lblSections.Refresh();
             UpdateLyricLabels();
             
@@ -5965,13 +6434,25 @@ namespace cPlayer
 
             if (xbox360.Checked || bandFuse.Checked)
             {
-                SongsToAdd.AddRange(files.Where(file => VariousFunctions.ReadFileType(file) == XboxFileType.STFS).ToList());
+                SongsToAdd.AddRange(
+                    files.Where(file =>
+                    {
+                        try
+                        {
+                            return VariousFunctions.ReadFileType(file) == XboxFileType.STFS;
+                        }
+                        catch
+                        {                            
+                            return false; // Skip this file on error
+                        }
+                    }).ToList());
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
                 SongsToAdd.AddRange(files.Where(file => Path.GetFileName(file) == "song.ini").ToList());
                 SongsToAdd.AddRange(files.Where(file => Path.GetFileName(file) == "songs.dta").ToList());
                 SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == ".sng").ToList());
+                SongsToAdd.AddRange(files.Where(file => Path.GetExtension(file) == ".yargsong").ToList());
             }
             else if (pS3.Checked)
             {
@@ -6008,9 +6489,9 @@ namespace cPlayer
             {
                 type = "CON | LIVE";
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
-                type = "song.ini | songs.dta | .sng";
+                type = "song.ini | songs.dta | .sng | .yargsong";
             }
             else if (pS3.Checked)
             {
@@ -6022,7 +6503,7 @@ namespace cPlayer
             }
             else if (fortNite.Checked)
             {
-                type = ".fnf";
+                type = ".fnf | .m4a";
             }
             else if (guitarHero.Checked)
             {
@@ -6046,12 +6527,18 @@ namespace cPlayer
         private void folderScanner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Log("Folder scanner finished");
+            if (GIFOverlay != null)
+            {
+                GIFOverlay.Close();
+                GIFOverlay = null;
+            }
             var type = GetCurrentDataType();
             if (!SongsToAdd.Any())
             {
                 var msg = "No " + type + " files found in that folder, nothing to add to the playlist";
                 Log(msg);
                 MessageBox.Show(msg, AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                isScanning = false;
                 EnableDisable(true);
                 return;
             }
@@ -6061,6 +6548,7 @@ namespace cPlayer
             StartingCount = lstPlaylist.Items.Count;
             isScanning = true;
             UpdateNotifyTray();
+            InitiateGIFOverlay();
             batchSongLoader.RunWorkerAsync();
         }
 
@@ -6105,7 +6593,7 @@ namespace cPlayer
                     time += Playlist[ind].Length;
                 }
                 lblUpdates.Text = "Songs: " + lstPlaylist.Items.Count;
-                if (openSideWindow.Checked)
+                if (openSideWindow.Checked && string.IsNullOrEmpty(activeM4AFile))
                 {
                     lblUpdates.Text = lblUpdates.Text + "   |   Playing Time: " + Parser.GetSongDuration(time.ToString(CultureInfo.InvariantCulture));
                 }
@@ -6121,11 +6609,12 @@ namespace cPlayer
         private void PlaylistContextMenu_Opening(object sender, CancelEventArgs e)
         {
             PlaylistContextMenu.Enabled = !songExtractor.IsBusy && !songPreparer.IsBusy;
-            if (picWorking.Visible || lstPlaylist.Items.Count == 0)
+            if (GIFOverlay != null || lstPlaylist.Items.Count == 0)
             {
                 e.Cancel = true;
                 return;
             }
+
             playNowToolStripMenuItem.Visible = lstPlaylist.SelectedItems.Count == 1;
             playNextToolStripMenuItem.Visible = lstPlaylist.SelectedItems.Count == 1 && PlayingSong != null;
             removeToolStripMenuItem.Visible = lstPlaylist.SelectedItems.Count > 0;
@@ -6138,7 +6627,7 @@ namespace cPlayer
             goToGenre.Visible = false;
             returnToPlaylist.Visible = Playlist.Count != StaticPlaylist.Count;
             sortPlaylistByArtist.Visible = lstPlaylist.Items.Count > 0;
-            sortPlaylistByDuration.Visible = lstPlaylist.Items.Count > 0;
+            sortPlaylistByDuration.Visible = lstPlaylist.Items.Count > 0 && !m4aFiles.Any();
             sortPlaylistBySong.Visible = lstPlaylist.Items.Count > 0;
             randomizePlaylist.Visible = lstPlaylist.Items.Count > 0;
             startInstaMix.Visible = lstPlaylist.Items.Count > 0;
@@ -6205,7 +6694,7 @@ namespace cPlayer
             txtSearch.Invoke(new MethodInvoker(() => txtSearch.Text = "Type to search playlist..."));
             if (lstPlaylist.Items.Count != StaticPlaylist.Count)
             {
-                ReloadPlaylist(Playlist);
+                ReloadPlaylist(Playlist, true, true, false);
             }
             if (PlayingSong == null) return;
             UpdateHighlights();
@@ -6235,6 +6724,7 @@ namespace cPlayer
             Log("scanForSongsAutomatically_Click");
             isScanning = true;
             UpdateNotifyTray();
+            InitiateGIFOverlay();
             folderScanner.RunWorkerAsync();
         }
 
@@ -6277,11 +6767,13 @@ namespace cPlayer
                     return;
                 }
             }
-            else if (phaseShift.Checked)
+            else if (yarg.Checked)
             {
                 SongsToAdd = ofd.FileNames.Where(file => Path.GetFileName(file) == "song.ini").ToList();
                 var sng = ofd.FileNames.Where(file => Path.GetExtension(file) == ".sng").ToList();
-                SongsToAdd.AddRange(sng);                
+                SongsToAdd.AddRange(sng);
+                var yargsong = ofd.FileNames.Where(file => Path.GetExtension(file) == ".yargsong").ToList();
+                SongsToAdd.AddRange(yargsong);
             }
             else if (rockSmith.Checked)
             {
@@ -6313,6 +6805,7 @@ namespace cPlayer
             StartingCount = lstPlaylist.Items.Count;
             isScanning = true;
             UpdateNotifyTray();
+            InitiateGIFOverlay();
             if (ofd.FileNames.Count() > 1)
             {
                 batchSongLoader.RunWorkerAsync();
@@ -6363,6 +6856,7 @@ namespace cPlayer
             MediaPlayer.stretchToFit = true;
             UpdateDisplay(false);
             Application.DoEvents();
+            Activate();
             InitBASS();
             if (!string.IsNullOrEmpty(PlaylistPath) && autoloadLastPlaylist.Checked && File.Exists(PlaylistPath))
             {
@@ -6481,8 +6975,8 @@ namespace cPlayer
 
         private void VisualsContextMenu_Opening(object sender, CancelEventArgs e)
         {
-            displayBackgroundVideo.Visible = phaseShift.Checked;
-            toolStripMenuItem2.Visible = phaseShift.Checked;
+            displayBackgroundVideo.Visible = yarg.Checked;
+            toolStripMenuItem2.Visible = yarg.Checked;
             displayKaraokeMode.Enabled = PlayingSong == null || (MIDITools.PhrasesVocals.Phrases.Any() && MIDITools.LyricsVocals.Lyrics.Any());
             styleToolStripMenuItem.Visible = displayMIDIChartVisuals.Checked;
             toolStripMenuItem8.Visible = displayMIDIChartVisuals.Checked;
@@ -7188,7 +7682,7 @@ namespace cPlayer
 
         private void picRandom_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Left || lstPlaylist.Items.Count == 0 || songExtractor.IsBusy || songPreparer.IsBusy) return;
+            if (e.Button != MouseButtons.Left || lstPlaylist.Items.Count <= 1 || songExtractor.IsBusy || songPreparer.IsBusy) return;
             DoShuffleSongs();
         }
         
@@ -7227,7 +7721,7 @@ namespace cPlayer
             {
                 try
                 {
-                    client.DownloadFile("https://keepitfishy.com/rb3/cplayer/update.txt", path);
+                    client.DownloadFile("https://nemosnautilus.com/cplayer/update.txt", path);
                 }
                 catch (Exception)
                 { }
@@ -7361,8 +7855,9 @@ namespace cPlayer
                 return;
             }
             if (displayKaraokeMode.Checked && MIDITools.PhrasesVocals.Phrases.Any() && MIDITools.LyricsVocals.Lyrics.Any())
-            {
-                DoKaraokeMode(e.Graphics, MIDITools.PhrasesVocals.Phrases, MIDITools.LyricsVocals.Lyrics);
+            {                
+                KaraokeOverlay.Visible = false;
+                DoKaraokeMode(e.Graphics, MIDITools.PhrasesVocals.Phrases, MIDITools.LyricsVocals.Lyrics);        
                 return;
             }
             if (!displayMIDIChartVisuals.Checked || (!chartSnippet.Checked && DrewFullChart)) return;
@@ -7414,7 +7909,7 @@ namespace cPlayer
         {
             IntroSilenceNext = 0.0;
             OutroSilenceNext = 0.0;
-            if (!skipIntroOutroSilence.Checked || phaseShift.Checked || powerGig.Checked || bandFuse.Checked || fortNite.Checked || guitarHero.Checked) return;
+            if (!skipIntroOutroSilence.Checked || yarg.Checked || powerGig.Checked || bandFuse.Checked || fortNite.Checked || guitarHero.Checked) return;
             if (nautilus.NextSongOggData == null || nautilus.NextSongOggData.Length == 0) return;
             var stream = Bass.BASS_StreamCreateFile(nautilus.GetOggStreamIntPtr(true), 0L, nautilus.NextSongOggData.Length, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
             if (stream == 0)
@@ -7508,7 +8003,7 @@ namespace cPlayer
             UpdateDisplay(false);
         }
 
-        private void MediaPlayer_ClickEvent(object sender, AxWMPLib._WMPOCXEvents_ClickEvent e)
+        private void MediaPlayer_ClickEvent(object sender, _WMPOCXEvents_ClickEvent e)
         {
             if (e.nButton == 2)
             {
@@ -7578,7 +8073,42 @@ namespace cPlayer
             displayBackgroundVideo.Checked = playBGVideos.Checked;
             displayBackgroundVideo_Click(sender, e);
         }
+
+        private void frmMain_Move(object sender, EventArgs e)
+        {
+            UpdateOverlayPosition();
+        }
+
+        private void gifTmr_Tick(object sender, EventArgs e)
+        {
+            if (GIFOverlay == null) return;
+            var visible = MonitorApplicationFocus();
+            if (visible)
+            {
+                GIFOverlay.Start();
+            }
+            else
+            {
+                GIFOverlay.Stop();
+            }
+            if (!GIFOverlay.Visible) return;
+            UpdateOverlayPosition();
+        }
     }
+
+    public class ActiveWord
+    {
+        public string Text { get; set; }
+        public double WordStart { get; set; }
+        public double WordEnd { get; set; }
+
+        public ActiveWord(string text, double wordStart, double wordEnd)
+        {
+            Text = text;
+            WordStart = wordStart;
+            WordEnd = wordEnd;
+        }
+    }      
 
     public class Song
     {

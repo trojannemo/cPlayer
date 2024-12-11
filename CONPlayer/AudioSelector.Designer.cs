@@ -53,6 +53,7 @@ namespace cPlayer
             this.chkDrums.Name = "chkDrums";
             this.chkDrums.Size = new System.Drawing.Size(56, 17);
             this.chkDrums.TabIndex = 0;
+            this.chkDrums.TabStop = false;
             this.chkDrums.Text = "Drums";
             this.chkDrums.UseVisualStyleBackColor = true;
             this.chkDrums.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -65,6 +66,7 @@ namespace cPlayer
             this.chkBass.Name = "chkBass";
             this.chkBass.Size = new System.Drawing.Size(49, 17);
             this.chkBass.TabIndex = 1;
+            this.chkBass.TabStop = false;
             this.chkBass.Text = "Bass";
             this.chkBass.UseVisualStyleBackColor = true;
             this.chkBass.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -77,6 +79,7 @@ namespace cPlayer
             this.chkGuitar.Name = "chkGuitar";
             this.chkGuitar.Size = new System.Drawing.Size(54, 17);
             this.chkGuitar.TabIndex = 2;
+            this.chkGuitar.TabStop = false;
             this.chkGuitar.Text = "Guitar";
             this.chkGuitar.UseVisualStyleBackColor = true;
             this.chkGuitar.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -89,6 +92,7 @@ namespace cPlayer
             this.chkVocals.Name = "chkVocals";
             this.chkVocals.Size = new System.Drawing.Size(58, 17);
             this.chkVocals.TabIndex = 3;
+            this.chkVocals.TabStop = false;
             this.chkVocals.Text = "Vocals";
             this.chkVocals.UseVisualStyleBackColor = true;
             this.chkVocals.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -101,6 +105,7 @@ namespace cPlayer
             this.chkKeys.Name = "chkKeys";
             this.chkKeys.Size = new System.Drawing.Size(49, 17);
             this.chkKeys.TabIndex = 4;
+            this.chkKeys.TabStop = false;
             this.chkKeys.Text = "Keys";
             this.chkKeys.UseVisualStyleBackColor = true;
             this.chkKeys.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -113,6 +118,7 @@ namespace cPlayer
             this.chkBacking.Name = "chkBacking";
             this.chkBacking.Size = new System.Drawing.Size(65, 17);
             this.chkBacking.TabIndex = 5;
+            this.chkBacking.TabStop = false;
             this.chkBacking.Text = "Backing";
             this.chkBacking.UseVisualStyleBackColor = true;
             this.chkBacking.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);
@@ -125,6 +131,7 @@ namespace cPlayer
             this.chkCrowd.Name = "chkCrowd";
             this.chkCrowd.Size = new System.Drawing.Size(56, 17);
             this.chkCrowd.TabIndex = 6;
+            this.chkCrowd.TabStop = false;
             this.chkCrowd.Text = "Crowd";
             this.chkCrowd.UseVisualStyleBackColor = true;
             this.chkCrowd.MouseUp += new System.Windows.Forms.MouseEventHandler(this.chkDrums_MouseUp);

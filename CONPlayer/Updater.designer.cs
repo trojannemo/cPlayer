@@ -39,7 +39,6 @@
             this.lstLog = new System.Windows.Forms.ListBox();
             this.btnDownload = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnForum = new System.Windows.Forms.Button();
             this.lblLink = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.SuspendLayout();
@@ -169,20 +168,6 @@
             this.btnCancel.UseVisualStyleBackColor = false;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // btnForum
-            // 
-            this.btnForum.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.btnForum.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnForum.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnForum.Location = new System.Drawing.Point(129, 286);
-            this.btnForum.Name = "btnForum";
-            this.btnForum.Size = new System.Drawing.Size(106, 23);
-            this.btnForum.TabIndex = 11;
-            this.btnForum.Text = "Visit forum thread";
-            this.btnForum.UseVisualStyleBackColor = false;
-            this.btnForum.Visible = false;
-            this.btnForum.Click += new System.EventHandler(this.btnForum_Click);
-            // 
             // lblLink
             // 
             this.lblLink.BackColor = System.Drawing.Color.Transparent;
@@ -215,7 +200,6 @@
             this.ClientSize = new System.Drawing.Size(480, 317);
             this.Controls.Add(this.lblLink);
             this.Controls.Add(this.label7);
-            this.Controls.Add(this.btnForum);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnDownload);
             this.Controls.Add(this.lstLog);
@@ -253,7 +237,6 @@
         private System.Windows.Forms.ListBox lstLog;
         private System.Windows.Forms.Button btnDownload;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnForum;
         private System.Windows.Forms.Label lblLink;
         private System.Windows.Forms.Label label7;
     }
