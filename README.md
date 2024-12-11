@@ -1,4 +1,4 @@
-# cPlayer
+# cPlayer (Dark Edition)
 
 cPlayer is my pet project, which started in 2014 when I thought to myself ... wouldn't it be cool if I could play Rock Band 3 customs like if they were regular songs?
 Over time it's grown to display the MIDI contents, to display lyrics in various modes including a Karaoke-style mode, and so on to make the most use of the information contained within Rock Band files.
