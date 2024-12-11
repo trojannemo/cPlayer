@@ -577,6 +577,7 @@ namespace cPlayer
             StartingCount = lstPlaylist.Items.Count;
             Log("Songs to add: " + SongsToAdd.Count);
             Log("Starting batch song loader");
+            InitiateGIFOverlay();
             batchSongLoader.RunWorkerAsync();
         }
 
@@ -2955,6 +2956,7 @@ namespace cPlayer
             nautilus.NextSongOggData = new byte[0];
             nautilus.ReleaseStreamHandle(true);
             ActiveSong.yargPath = "";
+            InitiateGIFOverlay();
             songPreparer.RunWorkerAsync();
         }
 

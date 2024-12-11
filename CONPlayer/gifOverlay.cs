@@ -1,6 +1,6 @@
-﻿using System;
+﻿using cPlayer.Properties;
+using System;
 using System.Drawing;
-using System.IO;
 using System.Windows.Forms;
 
 namespace cPlayer
@@ -14,18 +14,7 @@ namespace cPlayer
         public gifOverlay(frmMain MainForm)
         {
             InitializeComponent();
-            // Load the GIF
-            var gifPATH = Application.StartupPath + "\\res\\working.gif";
-            if (File.Exists(gifPATH) )
-            {
-                spinningGif = Image.FromFile(gifPATH);
-            }
-            else
-            {
-                MessageBox.Show("Can't find that GIF file!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Dispose();
-                return;
-            }
+            spinningGif = Resources.loading_blue;
             if (spinningGif == null)
             {
                 MessageBox.Show("Failed to load GIF!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
