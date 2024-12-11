@@ -6,6 +6,21 @@ For instructions on how to use, click on Help -> How to Use
 
 CHANGE LOG:
 
+v3.1.0
+- Added support for Fortnite Festival files using the custom .fnf format and the original .m4a audio - a little wonky for now but it "works"
+- Added support for YARG .yargsong format
+- Added support for playing back videos when using YARG's exCON format (video must be where the .mid and .mogg files are - see previous release notes for supported video file name and formats)
+- Changed Karaoke Mode behavior so when it shows you one whole word at a time, it colors it progressively as the word is being sung, similarly to how it also colors the current phrase being sung
+- Added support for playing Karaoke Mode lyrics over video if the song has both a video file present and Vocals charted
+- Fixed compatibility issue with RB4-to-RB2 special DTAs files that would lead to the songs not loading or loading with wrong data
+- Fixed behavior when scanning for CON files it would encounter a file with permission restrictions and it would fail the entire scan instead of skipping the problem file
+- Fixed behavior when scanning a folder and there are no target files found, cPlayer would get stuck on loading and you couldn't do anything or exit the program
+- Many other bug fixes and code improvements
+
+KNOWN BUG - Karaoke Mode doesn't work well with some RB4-to-RB2 midi files - appears something with the vocal phrase markers and/or vocal note lengths isn't right? Not sure. To be fixed when I figure out what's different about those few files.
+
+----------
+
 NOTE: CPLAYER HAS MIGRATED FROM NET FRAMEWORK 4.0 TO 4.8.1. ALSO ALL AUDIO PROCESSING DEPENDENCIES WERE UPDATED TO MOST RECENT (BASS, BASS.NET, BASS ADD-ONS)
 NOTHING SHOULD CHANGE FOR YOU BUT IF YOU NOTICE ANYTHING WEIRD OR BROKEN PLEASE LET ME KNOW ASAP
 
