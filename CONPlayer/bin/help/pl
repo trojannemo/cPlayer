@@ -1,0 +1,175 @@
+cPlayer: How To Use
+
+cPlayer is designed to seamlessly play Rock Band custom songs much like Winamp plays MP3s and VLC plays videos, only limited by the inherent limitations of the format, with emphasis on 'custom songs' - no discussion of playing back official content will be entertained.
+
+
+SUPPORTED FORMATS
+
+Xbox 360 - cPlayer will play all Rock Band custom songs in Xbox 360 CON or LIVE format, either in individual files or in packs. Because extracting the audio from packs can take exponentially longer than from a loose song file, it is recommended you dePACK your pack files with C3 CON Tools' Quick Pack Editor, but it is not necessary.
+
+PS3 - cPlayer will play all Rock Band custom songs in PS3 format that are stored as nested folder structures - 'packs' of songs referenced from a single songs.dta file are also supported. If you use C3 CON Tools' PS3 Converter, then your files are already in the right structure in the Merged Songs folder or in the All Songs folder. cPlayer is limited to interpreting the midi.edat files that were encrypted using C3 CON Tools' PS3 Converter with the default KLIC license. cPlayer will most likely fail at decrypting any other midi.edat files. In that case, cPlayer won't be able to display MIDI chart visuals or read the song lyrics for those songs - but it should still function as a media player just fine.
+
+Wii - cPlayer will play all Rock Band custom songs in Wii format that are stored as nested folder structures - 'packs' of songs referenced from a single songs.dta file are also supported. If you use C3 CON Tools' Wii Converter, then your files are already in the right structure after converting to the Wii format. cPlayer will only play Wii custom songs that use the mogg format for audio - at this point, BINK audio is not supported.
+
+PC (Phase Shift) - cPlayer will play all Phase Shift songs that follow the modern Phase Shift standards and are stored as nested folder structures - i.e. Phase Shift's 'Music' folder. If you use C3 CON Tools' Phase Shift Converter, then your files are already in the right structure after converting to the Phase Shift format. Songs must be stored individually with a song.ini file for each song. cPlayer's support for Phase Shift songs extends as far as its common elements with Rock Band songs - Phase Shift exclusive features like the more advanced keyboard and drums tracks are not supported. Both single track and multitrack songs are supported so long as they use .ogg audio files. cPlayer may or may not work well with FoF or FoFix songs - no explicit support is offered for these outdated formats.
+
+
+CHOOSING A CONSOLE
+
+You can only have one console selected. Sorry if you actually use Rock Band in more than one console. Go to Playlist -> Your console and select your console. This will affect how cPlayer behaves when loading a Playlist or adding songs to an existing Playlist.
+
+
+CREATING A NEW PLAYLIST
+
+By default, you're always running a 'new' Playlist. If you've already loaded a Playlist and want to start a new one, click on File -> New.
+
+
+SAVING A PLAYLIST
+
+Once you've added songs (see below), you can save your Playlist by clicking File -> Save or File -> Save As - if this is a new (unnamed) Playlist, you have to enter a name for it and it'll be saved in the /playlists of cPlayer. If this is an existing Playlist and you click File -> Save, any sorting modifications or song removals will be saved to the Playlist, but no filtering is applied when saving. This ensures you can have thousands of songs loaded, search for one artist, and then save the Playlist without losing all your other songs. If you want to only save whatever your Playlist is displaying (i.e. the searched for artist, genre, etc), click on File -> Save As and you will be prompted for a new name. Now only what is displayed in the Playlist is saved, rather than the entire Playlist in memory. This makes saving sub-playlists easy and non-destructive.
+
+
+RENAMING A PLAYLIST
+
+Click on Playlist -> Rename playlist. This will change the name of the Playlist only. You can also click on File -> Save As and a Playlist is saved with the new name and applying any filters you may have (see above).
+
+
+LOADING A PLAYLIST
+
+Click on File -> Open to select your Playlist or drag and drop the .playlist file to cPlayer.
+
+
+ADDING SONGS TO A PLAYLIST
+
+You have two choices: manually adding songs or letting cPlayer do an automatic folder scan for songs.
+
+Manually: click on Playlist -> Select and add songs manually. cPlayer will allow you to select as many CON/LIVE files (if your selected console is Xbox 360) or songs.dta files (if your selected console is PS3 or Wii) as you want. You can also drag and drop the song files to cPlayer. cPlayer will parse the files and add any songs that are not already part of your Playlist.
+
+Automatically: click on Playlist -> Scan for songs automatically. cPlayer will prompt you to select a folder and will then search that folder and any subfolders for any CON/LIVE files (if your selected console is Xbox 360) or songs.dta files (if your selected console is PS3 or Wii). cPlayer will then parse those files and add any songs that are not already part of your Playlist. 
+This process might take a very long time if it has to analyze several hundred or thousands of files, but it runs in the background. If like me you have all your (1000+) customs in one folder I recommend the first time you do it, you set it to run and minimize cPlayer and leave it running in the background overnight.
+
+Once cPlayer finishes adding songs, don't forget to save the Playlist!
+
+
+PLAYING SONGS
+
+cPlayer behaves like a typical media player, so all you really have to do is select a song in your Playlist and either double-click on it or right-click on it and then select 'Play now'.
+You can play/pause/stop, as well as skip to the next song. You can drag the time slider if you want to skip to a specific part of the song, or click on the estimated place in the timeline that you want to play. As you drag the slider, or if you hover over the timeline, you will be shown where you're jumping to and what section of the song it is if cPlayer was able to read the MIDI file for that song.
+You can click on Loop if you want to play the same song over and over ('Let it go, let it go...'). Click again to disable.
+The default behavior is to continue to the next song in the Playlist. Click on Shuffle to enable track shuffling and the next song will be picked at random. Click again to disable (and go back to Playlist order).
+If you want to play a specific song at any point, you can double click on it, or right-click and choose 'Play Now'.
+If you want to pick the song that plays next, right-click on the song and choose 'Play Next' - note that this will disable track shuffling since you're specifying playback order.
+At any time while playing you can press the Space Bar to pause/resume playback. Press Ctrl+Enter to start playing the selected song on the Playlist Panel.
+
+LIMITATION! - unlike Winamp and other media players that play simple files, you should be aware that these files require preparing before they can be played. If you allow cPlayer to do its thing, it always anticipates what song will play next and prepare it ahead of time so you don't have to wait. If you pick a song manually and set it to play by double-clicking it or clicking on 'Play now', cPlayer has to process that song at that moment, so you may have to wait a few seconds before it can play it.
+
+
+PLAYBACK CONTROL and METADATA
+
+At the top left corner is the Playback Panel. Here you can find the song's metadata, limited to what the song author put in.
+You can see the name of the band, the name of the song and the name of the album. If any of these are too long they will be truncated to fit the space. You can place your mouse cursor over the field so you can read the full name. Here you can also find the song genre, track number and year of release if present in the song's metadata.
+The album art image is displayed, resized, if one is present in the song file - click on it to see the full sized image. If the song doesn't have album art attached to it, cPlayer will use the album art field to display audio spectrum visualizations - click on it to cycle through the 10+ styles available.
+If the song metadata includes the name of the author/charter, it will also be displayed here.
+Lastly, you can click on the speaker icon to adjust the volume level for playback of your songs. This adjusts the attenuation applied to the song volume (0 being -50dB and 100 being -0dB = full volume). You still retain volume control of your speaker/sound system.
+
+
+THE PLAYLIST
+
+Under the Playback Panel you have the Playlist Panel. This displays the song files as they are stored in your Playlist.
+You can theoretically have up to 9999 songs here - I have only tested with ~2300 songs, let me know if you have more and it works well.
+Songs are listed as Playlist Index | Artist - Song Name | Song Length in hh:mm:ss.
+You have many options on how you can modify this Playlist by right-clicking on one or multiple (hold down Control) songs...let's go over some of them:
+
+Play now - will stop playback (if playing) and start playback of the selected song immediately (subject to the limitation mentioned above).
+Play next - will make cPlayer play the selected song next after the current song finishes playing (and will also disable track shuffling).
+Go to artist - will filter your Playlist by only displaying songs by or featuring the artist of the selected song, and sort the songs by song name.
+Go to album - will filter your Playlist by only displaying songs that are part of the same album as the selected song, and sort the songs by track number.
+Go to genre - will filter your Playlist by only displaying songs with the same genre as the selected song, and sort the songs by artist name.
+Start Insta-Mix - will attempt to create a mix of songs that sound similar to the one selected - it starts by finding all songs in your Playlist with the same genre, then narrows that down to songs with similar BPM and song duration
+Mark as played/unplayed - will mark the song opposite of its current tag - when shuffling, cPlayer ignores songs already played, this restores a song's ability to be picked during shuffling. You can select multiple songs for this option (hold down Control).
+Move up/down - will move the song up or down on your Playlist - useful if you don't like shuffling and want to structure your Playlist in a specific order.
+Open file location - will open Windows Explorer and select the file for you - useful if you want to modify and/or locate the file among a bunch of other files.
+Remove from playlist - will completely remove the selected song(s) from your Playlist - you must save your Playlist for the changes to be final. You can select multiple songs for this option (hold down Control).
+Sort by artist name - will sort the entire Playlist by artist name, alphabetically.
+Sort by song title - will sort the entire Playlist by song title, alphabetically.
+Sort by song duration - will sort the entire Playlist by song duration, from shortest to longest.
+Sort by modified date - will sort the entire Playlist by last modified date, from most recent to oldest.
+Randomize order - will rearrange songs within the Playlist in a random order and disable track shuffling
+Return to playlist - restores the entire Playlist if you had filtered it using any of the above.
+
+You can also search within your Playlist - either press Control + F or click on the search box, type your search term and press Enter or click Go To to scroll to the next instance of the search term. Click Filter to filter your Playlist to only songs that contain the search term in the name of the song or artist.
+Click Clear to restore the full Playlist.
+While the Playlist is selected, you can press any letter on your keyboard to skip to songs that start with that letter.
+If you want to move a song up or down on the Playlist, hold down Alt and press the up or down keys and it will be moved.
+
+
+OPTIONS
+
+You have a few choices on how to customize your experience with cPlayer to best fit your style:
+
+Auto-load last playlist - whenever you start cPlayer, it will automatically load your last used Playlist if it still exists.
+
+Auto-play after loading - whenever a Playlist is loaded, cPlayer will start playing a song. If track shuffling is enabled, cPlayer will pick a song at random and play that, otherwise cPlayer will play the first song in the Playlist. If combined with the Auto-load option, every time you start cPlayer it starts playing a song.
+
+Skip intro/outro silence - when enabled, cPlayer scans the intro and outro of the song and tries to skip the very low volume or silent intro and outro portions for a better back-to-back experience
+
+Audio tracks to play - allows you to tell cPlayer which audio tracks to play - when the song is multitracked, this will mute/play the tracks as selected - obviously on a non-multitrack song, the whole audio is on the backing track and this setting makes no difference
+
+Show practice sections - enables displaying of the current practice session name at the top of the window
+
+MIDI display settings - allows you to tell cPlayer which MIDI charts to display if you have 'Display MIDI chart visuals' enabled, whether to label each MIDI track, whether to highlight the track during a solo, whether to show the name of the Pro-Keys notes, whether to show the name of the Vocals/Harmonies notes, how to resize the MIDI notes and how fast to scroll the MIDI information across the screen (in seconds from when it first appears on the far right to when it cross the left edge)
+
+Lyrics settings - allows you select from the various lyric display options - you can choose between static lyrics, karaoke lyrics, scrolling lyrics, or no lyrics - cPlayer also allows you to choose whether to only display PART VOCALS lyrics or lyrics from all Harmony parts present in the chart - when using static or karaoke lyrics, cPlayer allows you to choose to display whole words, or game syl- la- bles as displayed in game
+
+Open side window - whether to open or hide the side window ('Visuals Panel') to display MIDI chart visuals, album art, or audio spectrum, etc
+
+
+BACKGROUND VIDEOS (Phase Shift only)
+
+cPlayer allows you to display your song's background video instead of the other visualizations (see below) for songs that have them. To enable, right-click on the right panel and enable 'Play Background Videos'
+
+When this setting is enabled, cPlayer first reads your song.ini file for a video entry, and if there isn't one, searches the song's folder for a background.avi file. If a background video file is present, cPlayer overrides any other display setting and plays the video provided with the song. Only the video is played, audio from video (if any) is muted
+
+Phase Shift (at the time of this writing) only works with videos named 'background' and in AVI format - cPlayer allows you to use any file name (as long as it's correctly entered into the song.ini file with a video = filename.extension line) and most video formats (as long as you have the proper codecs and Windows Media Player can play it)
+
+
+MIDI VISUALIZATIONS
+
+Let's start by saying this is just for fun. Do not expect this to be game-quality sync nor REAPER-accurate charts. But we have all this MIDI information, why not have some fun with it? If selected, cPlayer will play the MIDI contents along with the audio and display them in one of two ways. To change between them, right-click on the Visualizations Panel and choose between:
+
+Chart: Snippet - attempts to show you a snippet of the chart in a way that resembles how it looks in REAPER's charting window - it's a fun way to get an idea of how the song is charted but don't expect 1:1 game quality or accuracy!
+
+Chart: Full - attempts to draw the entire chart as the song plays - it makes a nice final image but remember we're drawing things as small as a single pixel, so don't expect REAPER accuracy in a 600 pixel wide panel!
+
+MIDI Visualizations consist of the expert charts of the following, when present in the MIDI file:
+PART DRUMS
+PART BASS
+PART GUITAR
+PART REAL_KEYS_X (PART KEYS if the song has Keys but no Pro Keys)
+PART VOCALS (if no harmonies are present, otherwise HARM1)
+HARM2
+HARM3
+
+
+AUDIO SPECTRUM VISUALIZATIONS
+
+cPlayer uses BASS.NET to play the audio files, and it makes uses of BASS.NET's Visuals class to give you a real-time audio spectrum analysis in the form of a visualization with various ways of displaying it.
+
+To enable, right-click on the Visuals Panels and select 'Display Audio Spectrum' - click on the visualizations to cycle through the few styles available. 
+
+If the song has no album art, this is displayed on the album art field by default. In that case, when you enable 'Display audio spectrum' it will stop displaying on the album art field. Similarly, if you tell cPlayer to use the Visuals Panel to display the album art (see below), then the audio spectrum visualizations are displayed on the album art field on the Playback Panel.
+
+
+DISPLAYING ALBUM ART
+
+By default, if the song has album art, it will be displayed, resized, on the top left corner in the Playback Panel. However, cPlayer allows you to highlight the album art by presenting you with a copy of the full album art image over a stylized enlarged version of it as a background. This can be a nice way to see the detail of a large album art file that would otherwise be reduced to the small album art preview box.
+
+To enable, right-click on the Visuals Panel and select 'Display Album Art' - doing this will display the audio spectrum visualizations on the album art field.
+
+
+KARAOKE MODE
+
+cPlayer can now be used for karaoke fun. To enable, right-click on the Visuals panel and select 'Display Karaoke Mode' - cPlayer will do a karaoke interpretation of the lead vocals track. cPlayer will scale well in karaoke mode, so you can put it on a big screen TV and maximize it for party fun.
+
+
+Enjoy.
