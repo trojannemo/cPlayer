@@ -252,14 +252,21 @@ namespace cPlayer
                         MIDIInfo.UsesCowbell = SongUsesCowbell(MIDIFile.Events[i]);
 
                         //only do this if we have exact match of lyrics and vocal notes
-                        if (MIDIInfo.Vocals.ChartedNotes.Count == InternalVocals.Lyrics.Count)
+                        var ChartedNotesNoPercussion = new List<MIDINote>();
+                        for (var c = 0; c < MIDIInfo.Vocals.ChartedNotes.Count; c++)
                         {
-                            List<MIDINote> mNotes = MIDIInfo.Vocals.ChartedNotes;
-                            mNotes.Sort((a, b) => a.NoteStart.CompareTo(b.NoteStart));
-
-                            for (int z = 0; z < mNotes.Count; z++)
+                            if ((MIDIInfo.Vocals.ChartedNotes[c].NoteNumber < 96)) //avoid percussion
                             {
-                                InternalVocals.Lyrics[z].LyricDuration = mNotes[z].NoteLength;
+                                ChartedNotesNoPercussion.Add(MIDIInfo.Vocals.ChartedNotes[c]);
+                            }
+                        }
+                        if (ChartedNotesNoPercussion.Count == InternalVocals.Lyrics.Count)
+                        {
+                            ChartedNotesNoPercussion.Sort((a, b) => a.NoteStart.CompareTo(b.NoteStart));
+
+                            for (int z = 0; z < ChartedNotesNoPercussion.Count; z++)
+                            {
+                                InternalVocals.Lyrics[z].LyricDuration = ChartedNotesNoPercussion[z].NoteLength;
                             }
                         }
                     }
