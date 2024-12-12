@@ -2956,6 +2956,7 @@ namespace cPlayer
             nautilus.NextSongOggData = new byte[0];
             nautilus.ReleaseStreamHandle(true);
             ActiveSong.yargPath = "";
+            StopVideoPlayback(true);
             InitiateGIFOverlay();
             songPreparer.RunWorkerAsync();
         }
@@ -4118,6 +4119,8 @@ namespace cPlayer
             }
             btnLoop.Enabled = false;
             btnShuffle.Enabled = false;
+            StopVideoPlayback(true);
+            InitiateGIFOverlay();
             songExtractor.RunWorkerAsync();
         }
 
@@ -5448,8 +5451,8 @@ namespace cPlayer
                     }
                     else if (PlaybackSeconds * 1000 >= PlayingSong.Length && btnShuffle.Tag.ToString() == "shuffle")
                     {
-                        PlaybackTimer.Enabled = false;
                         DoShuffleSongs();
+                        PlaybackTimer.Enabled = false;
                         return;
                     }
                     UpdateTime();
@@ -5480,18 +5483,7 @@ namespace cPlayer
                     }
                     return;
                 }
-                if (btnLoop.Tag.ToString() == "loop")
-                {
-                    goto GoToNextSong;
-                }
-                else if (btnShuffle.Tag.ToString() != "shuffle")
-                {
-                    GetNextSong();
-                }
-                else
-                {
-                    return;
-                }
+                goto GoToNextSong;
             }
             catch (Exception)
             {
@@ -5507,6 +5499,7 @@ namespace cPlayer
             else if (btnShuffle.Tag.ToString() == "shuffle")
             {
                 DoShuffleSongs();
+                PlaybackTimer.Enabled = false;
                 return;
             }
             else
@@ -6222,7 +6215,7 @@ namespace cPlayer
 
         private void StopVideoPlayback(bool stop = true)
         {
-            if (MediaPlayer.playState != WMPPlayState.wmppsPlaying && MediaPlayer.playState != WMPPlayState.wmppsPaused) return;
+            VideoIsPlaying = (MediaPlayer.playState == WMPPlayState.wmppsPlaying || MediaPlayer.playState == WMPPlayState.wmppsPaused) && displayBackgroundVideo.Checked;
             Log("Stopping video playback");
             if (stop)
             {
@@ -6234,7 +6227,6 @@ namespace cPlayer
                 MediaPlayer.Ctlcontrols.pause();
             }
             MediaPlayer.Visible = false;
-            VideoIsPlaying = false;
         }
 
         private void StopBASS()
