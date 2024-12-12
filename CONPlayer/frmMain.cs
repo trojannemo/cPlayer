@@ -5577,7 +5577,7 @@ namespace cPlayer
             string line;
             try
             {
-                line = phrase == null || string.IsNullOrEmpty(phrase.PhraseText.Trim()) ? GetMusicNotes() : ProcessLine(phrase.PhraseText, doWholeWordsLyrics);
+                line = phrase == null || phrase.PhraseText == null || string.IsNullOrEmpty(phrase.PhraseText.Trim()) ? GetMusicNotes() : ProcessLine(phrase.PhraseText, doWholeWordsLyrics);
             }
             catch (Exception)
             {
