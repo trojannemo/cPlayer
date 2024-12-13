@@ -105,10 +105,7 @@ namespace cPlayer
             this.styleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.chartSnippet = new System.Windows.Forms.ToolStripMenuItem();
             this.chartFull = new System.Windows.Forms.ToolStripMenuItem();
-            this.lblHarm3 = new System.Windows.Forms.Label();
-            this.lblHarm2 = new System.Windows.Forms.Label();
             this.lblSections = new System.Windows.Forms.Label();
-            this.lblHarm1 = new System.Windows.Forms.Label();
             this.lblAuthor = new System.Windows.Forms.Label();
             this.panelPlaying = new System.Windows.Forms.Panel();
             this.picRandom = new System.Windows.Forms.PictureBox();
@@ -130,8 +127,6 @@ namespace cPlayer
             this.lblArtist = new System.Windows.Forms.Label();
             this.picPreview = new System.Windows.Forms.PictureBox();
             this.panelPlaylist = new System.Windows.Forms.Panel();
-            this.workingContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.cancelProcess = new System.Windows.Forms.ToolStripMenuItem();
             this.lstPlaylist = new System.Windows.Forms.ListView();
             this.colIndex = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.colSong = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -157,6 +152,8 @@ namespace cPlayer
             this.sortPlaylistByModifiedDate = new System.Windows.Forms.ToolStripMenuItem();
             this.randomizePlaylist = new System.Windows.Forms.ToolStripMenuItem();
             this.returnToPlaylist = new System.Windows.Forms.ToolStripMenuItem();
+            this.workingContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.cancelProcess = new System.Windows.Forms.ToolStripMenuItem();
             this.batchSongLoader = new System.ComponentModel.BackgroundWorker();
             this.songLoader = new System.ComponentModel.BackgroundWorker();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -190,8 +187,8 @@ namespace cPlayer
             ((System.ComponentModel.ISupportInitialize)(this.picVolume)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picPreview)).BeginInit();
             this.panelPlaylist.SuspendLayout();
-            this.workingContextMenu.SuspendLayout();
             this.PlaylistContextMenu.SuspendLayout();
+            this.workingContextMenu.SuspendLayout();
             this.NotifyContextMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -748,10 +745,7 @@ namespace cPlayer
             this.picVisuals.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.picVisuals.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.picVisuals.ContextMenuStrip = this.VisualsContextMenu;
-            this.picVisuals.Controls.Add(this.lblHarm3);
-            this.picVisuals.Controls.Add(this.lblHarm2);
             this.picVisuals.Controls.Add(this.lblSections);
-            this.picVisuals.Controls.Add(this.lblHarm1);
             this.picVisuals.Location = new System.Drawing.Point(396, 27);
             this.picVisuals.Name = "picVisuals";
             this.picVisuals.Size = new System.Drawing.Size(590, 654);
@@ -874,44 +868,6 @@ namespace cPlayer
             this.chartFull.Text = "Chart: Full";
             this.chartFull.Click += new System.EventHandler(this.UpdateVisualStyle);
             // 
-            // lblHarm3
-            // 
-            this.lblHarm3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblHarm3.AutoEllipsis = true;
-            this.lblHarm3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.lblHarm3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblHarm3.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblHarm3.ForeColor = System.Drawing.Color.White;
-            this.lblHarm3.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.lblHarm3.Location = new System.Drawing.Point(0, 632);
-            this.lblHarm3.Margin = new System.Windows.Forms.Padding(0);
-            this.lblHarm3.Name = "lblHarm3";
-            this.lblHarm3.Size = new System.Drawing.Size(588, 20);
-            this.lblHarm3.TabIndex = 4;
-            this.lblHarm3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblHarm3.UseMnemonic = false;
-            this.lblHarm3.Paint += new System.Windows.Forms.PaintEventHandler(this.lblHarm3_Paint);
-            // 
-            // lblHarm2
-            // 
-            this.lblHarm2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblHarm2.AutoEllipsis = true;
-            this.lblHarm2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.lblHarm2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblHarm2.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblHarm2.ForeColor = System.Drawing.Color.White;
-            this.lblHarm2.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.lblHarm2.Location = new System.Drawing.Point(0, 613);
-            this.lblHarm2.Margin = new System.Windows.Forms.Padding(0);
-            this.lblHarm2.Name = "lblHarm2";
-            this.lblHarm2.Size = new System.Drawing.Size(588, 20);
-            this.lblHarm2.TabIndex = 3;
-            this.lblHarm2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblHarm2.UseMnemonic = false;
-            this.lblHarm2.Paint += new System.Windows.Forms.PaintEventHandler(this.lblHarm2_Paint);
-            // 
             // lblSections
             // 
             this.lblSections.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -929,25 +885,6 @@ namespace cPlayer
             this.lblSections.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblSections.UseMnemonic = false;
             this.lblSections.Visible = false;
-            // 
-            // lblHarm1
-            // 
-            this.lblHarm1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.lblHarm1.AutoEllipsis = true;
-            this.lblHarm1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
-            this.lblHarm1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblHarm1.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblHarm1.ForeColor = System.Drawing.Color.White;
-            this.lblHarm1.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.lblHarm1.Location = new System.Drawing.Point(0, 594);
-            this.lblHarm1.Margin = new System.Windows.Forms.Padding(0);
-            this.lblHarm1.Name = "lblHarm1";
-            this.lblHarm1.Size = new System.Drawing.Size(588, 20);
-            this.lblHarm1.TabIndex = 1;
-            this.lblHarm1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblHarm1.UseMnemonic = false;
-            this.lblHarm1.Paint += new System.Windows.Forms.PaintEventHandler(this.lblHarm1_Paint);
             // 
             // lblAuthor
             // 
@@ -1252,23 +1189,6 @@ namespace cPlayer
             this.panelPlaylist.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseMove);
             this.panelPlaylist.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
             // 
-            // workingContextMenu
-            // 
-            this.workingContextMenu.BackColor = System.Drawing.Color.Black;
-            this.workingContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cancelProcess});
-            this.workingContextMenu.Name = "workingContextMenu";
-            this.workingContextMenu.ShowImageMargin = false;
-            this.workingContextMenu.Size = new System.Drawing.Size(129, 26);
-            // 
-            // cancelProcess
-            // 
-            this.cancelProcess.ForeColor = System.Drawing.Color.White;
-            this.cancelProcess.Name = "cancelProcess";
-            this.cancelProcess.Size = new System.Drawing.Size(128, 22);
-            this.cancelProcess.Text = "Cancel process";
-            this.cancelProcess.Click += new System.EventHandler(this.cancelProcess_Click);
-            // 
             // lstPlaylist
             // 
             this.lstPlaylist.AllowDrop = true;
@@ -1513,6 +1433,23 @@ namespace cPlayer
             this.returnToPlaylist.Text = "Return to playlist";
             this.returnToPlaylist.Click += new System.EventHandler(this.returnToPlaylist_Click);
             // 
+            // workingContextMenu
+            // 
+            this.workingContextMenu.BackColor = System.Drawing.Color.Black;
+            this.workingContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.cancelProcess});
+            this.workingContextMenu.Name = "workingContextMenu";
+            this.workingContextMenu.ShowImageMargin = false;
+            this.workingContextMenu.Size = new System.Drawing.Size(129, 26);
+            // 
+            // cancelProcess
+            // 
+            this.cancelProcess.ForeColor = System.Drawing.Color.White;
+            this.cancelProcess.Name = "cancelProcess";
+            this.cancelProcess.Size = new System.Drawing.Size(128, 22);
+            this.cancelProcess.Text = "Cancel process";
+            this.cancelProcess.Click += new System.EventHandler(this.cancelProcess_Click);
+            // 
             // batchSongLoader
             // 
             this.batchSongLoader.WorkerReportsProgress = true;
@@ -1574,7 +1511,7 @@ namespace cPlayer
             // 
             // PlaybackTimer
             // 
-            this.PlaybackTimer.Interval = 500;
+            this.PlaybackTimer.Interval = 15;
             this.PlaybackTimer.Tick += new System.EventHandler(this.PlaybackTimer_Tick);
             // 
             // songPreparer
@@ -1772,8 +1709,8 @@ namespace cPlayer
             ((System.ComponentModel.ISupportInitialize)(this.picVolume)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picPreview)).EndInit();
             this.panelPlaylist.ResumeLayout(false);
-            this.workingContextMenu.ResumeLayout(false);
             this.PlaylistContextMenu.ResumeLayout(false);
+            this.workingContextMenu.ResumeLayout(false);
             this.NotifyContextMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -1856,7 +1793,6 @@ namespace cPlayer
         private System.Windows.Forms.ToolStripMenuItem pauseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem nextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showLyrics;
-        private System.Windows.Forms.Label lblHarm1;
         private System.ComponentModel.BackgroundWorker folderScanner;
         private System.Windows.Forms.ContextMenuStrip workingContextMenu;
         private System.Windows.Forms.ToolStripMenuItem cancelProcess;
@@ -1896,8 +1832,6 @@ namespace cPlayer
         private System.Windows.Forms.ToolStripMenuItem displayAudioSpectrum;
         private System.Windows.Forms.ToolStripMenuItem displayMIDIChartVisuals;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem8;
-        private System.Windows.Forms.Label lblHarm3;
-        private System.Windows.Forms.Label lblHarm2;
         private System.Windows.Forms.ToolStripMenuItem yarg;
         //private AxWMPLib.AxWindowsMediaPlayer MediaPlayer;
         private System.Windows.Forms.ToolStripMenuItem takeScreenshot;
