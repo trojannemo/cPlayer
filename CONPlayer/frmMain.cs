@@ -3414,6 +3414,11 @@ namespace cPlayer
                     }
                 }
 
+                var multiplier = 1;
+                if ((NoteSizingType == 2) && track.Name == "Vocals" || track.Name == "Harm1" || track.Name == "Harm2" || track.Name == "Harm3")
+                {
+                    multiplier = 2;
+                }
                 var note_width = ((note.NoteLength / (PlayingSong.Length / 1000.0)) * picVisuals.Width);
                 if (note_width < 1.0)
                 {
@@ -3493,7 +3498,7 @@ namespace cPlayer
                         {
                             using (var solidBrush = new SolidBrush(note.NoteColor))
                             {
-                                graphics.FillRectangle(solidBrush, left, y, (float)width, note_height);
+                                graphics.FillRectangle(solidBrush, left, y, (float)width, note_height * multiplier);
                             }
                         }
                         if (z + 1 < track.ChartedNotes.Count() && (track.Name == "Vocals" || track.Name == "Harm1" || track.Name == "Harm2" || track.Name == "Harm3"))
@@ -3536,8 +3541,8 @@ namespace cPlayer
                                         break;
                                     }
                                     var pointF1 = new PointF(left + (float)width, y);
-                                    var pointF2 = new PointF(left + (float)width, y + note_height);
-                                    var pointF3 = new PointF(x2, num6 + note_height);
+                                    var pointF2 = new PointF(left + (float)width, y + note_height * 2);
+                                    var pointF3 = new PointF(x2, num6 + note_height * 2);
                                     var pointF4 = new PointF(x2, num6);
                                     using (var solidBrush = new SolidBrush(((track.Name == "Vocals" && doMIDIHarm1onVocals) || track.Name != "Vocals") ? note.NoteColor : Color.LightGray))
                                     {
@@ -3551,12 +3556,7 @@ namespace cPlayer
                             }
                         }
                         if ((!doMIDINameVocals || (track.Name != "Vocals" && track.Name != "Harm1" && (track.Name != "Harm2" && track.Name != "Harm3"))) && (!doMIDINameProKeys || track.Name != "ProKeys")) continue;
-                        var emSize = note_height * 0.8f;
-                        if (emSize > 20.0)
-                        {
-                            emSize = 20f;
-                        }
-                        var font = new Font("Impact", emSize);
+                        var font = new Font("Impact", 12.0f);
                         TextRenderer.DrawText(graphics, note.NoteName, font, new Point((int)left + 1, y - 1), !doMIDIBWKeys || track.Name != "ProKeys" ? Color.White : (note.NoteName.Contains("#") ? Color.White : Color.Black), TextFormatFlags.NoPadding);
                     }
                 }
@@ -5522,14 +5522,14 @@ namespace cPlayer
                 return;
             }
 
-            var harmony = (doScrollingLyrics && MIDITools.LyricsHarm2.Lyrics.Any()) || ((doKaraokeLyrics || doStaticLyrics) && MIDITools.PhrasesHarm2.Phrases.Any());
-            var phrases = harmony && doHarmonyLyrics ? MIDITools.PhrasesHarm1.Phrases : MIDITools.PhrasesVocals.Phrases;
-            var lyrics = harmony && doHarmonyLyrics ? MIDITools.LyricsHarm1.Lyrics : MIDITools.LyricsVocals.Lyrics;
+            //var harmony = (doScrollingLyrics && MIDITools.LyricsHarm2.Lyrics.Any()) || ((doKaraokeLyrics || doStaticLyrics) && MIDITools.PhrasesHarm2.Phrases.Any());
+            var phrases = doHarmonyLyrics && MIDITools.PhrasesHarm1.Phrases.Any() ? MIDITools.PhrasesHarm1.Phrases : MIDITools.PhrasesVocals.Phrases;
+            var lyrics = doHarmonyLyrics && MIDITools.LyricsHarm1.Lyrics.Any() ? MIDITools.LyricsHarm1.Lyrics : MIDITools.LyricsVocals.Lyrics;
             var font = new Font("Segoe UI", 12f);
             var harm1Y = picVisuals.Height - (MIDITools.LyricsHarm3.Lyrics.Any() ? 60 : (MIDITools.LyricsHarm2.Lyrics.Any() ? 40 : 0));
             var harm2Y = picVisuals.Height - (MIDITools.LyricsHarm3.Lyrics.Any() ? 40 : 20);
             var harm3Y = picVisuals.Height - 20;
-            if (!doHarmonyLyrics)
+            if (!doHarmonyLyrics || (doHarmonyLyrics && !MIDITools.LyricsHarm2.Lyrics.Any()))
             {
                 harm1Y = harm3Y;
             }

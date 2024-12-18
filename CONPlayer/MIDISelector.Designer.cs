@@ -309,7 +309,7 @@ namespace cPlayer
             // 
             this.cboSizing.FormattingEnabled = true;
             this.cboSizing.Items.AddRange(new object[] {
-            "Size notes using mixed mode (default)",
+            "Size notes using mixed mode",
             "Size notes by charted note range",
             "Size notes by total valid note range"});
             this.cboSizing.Location = new System.Drawing.Point(15, 157);
