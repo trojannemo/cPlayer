@@ -3469,6 +3469,35 @@ namespace cPlayer
                 }
                 else if (chartSnippet.Checked)
                 {
+                    IEnumerable<Lyric> source = null;
+                    switch (track.Name)
+                    {
+                        case "Vocals":
+                            source = MIDITools.LyricsVocals.Lyrics;
+                            break;
+                        case "Harm1":
+                            source = MIDITools.LyricsHarm1.Lyrics;
+                            break;
+                        case "Harm2":
+                            source = MIDITools.LyricsHarm2.Lyrics;
+                            break;
+                        case "Harm3":
+                            source = MIDITools.LyricsHarm3.Lyrics;
+                            break;
+                    }
+                    var isUnpitched = false;
+                    if (source != null)
+                    {
+                        foreach (var lyric in source)
+                        {
+                            if (lyric.LyricStart == note.NoteStart)
+                            {
+                                isUnpitched = lyric.LyricText.Trim().EndsWith("#");
+                                break;
+                            }
+                        }
+                    }
+
                     var width = ((note.NoteLength / PlaybackWindow) * picVisuals.Width) * 0.8;
                     if (width < 1)
                     {
@@ -3495,33 +3524,17 @@ namespace cPlayer
                             }
                         }
                         else
-                        {
+                        {                            
                             using (var solidBrush = new SolidBrush(note.NoteColor))
                             {
-                                graphics.FillRectangle(solidBrush, left, y, (float)width, note_height * multiplier);
+                                graphics.FillRectangle(solidBrush, left, isUnpitched? track_y - track_height : y, (float)width, isUnpitched? track_height : note_height * multiplier);
                             }
                         }
                         if (z + 1 < track.ChartedNotes.Count() && (track.Name == "Vocals" || track.Name == "Harm1" || track.Name == "Harm2" || track.Name == "Harm3"))
                         {
                             var nextNote = track.ChartedNotes[z + 1];
                             try
-                            {
-                                IEnumerable<Lyric> source = null;
-                                switch (track.Name)
-                                {
-                                    case "Vocals":
-                                        source = MIDITools.LyricsVocals.Lyrics;
-                                        break;
-                                    case "Harm1":
-                                        source = MIDITools.LyricsHarm1.Lyrics;
-                                        break;
-                                    case "Harm2":
-                                        source = MIDITools.LyricsHarm2.Lyrics;
-                                        break;
-                                    case "Harm3":
-                                        source = MIDITools.LyricsHarm3.Lyrics;
-                                        break;
-                                }
+                            {                                
                                 var str = "";
                                 using (var enumerator = source.Where(lyric => lyric.LyricStart == nextNote.NoteStart).GetEnumerator())
                                 {
@@ -3530,7 +3543,7 @@ namespace cPlayer
                                         str = enumerator.Current.LyricText;
                                     }
                                 }
-                                if (!string.IsNullOrEmpty(str) && str.Replace("-", "").Trim() == "+")
+                                if (!string.IsNullOrEmpty(str) && str.Replace("-", "").Replace("$", "").Trim() == "+")
                                 {
                                     var x2 = (float)((nextNote.NoteStart - correctedTime) / PlaybackWindow) * picVisuals.Width;
                                     var num6 = y;
