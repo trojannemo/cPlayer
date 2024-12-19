@@ -150,6 +150,12 @@
     <Compile Include="LyricSelector.Designer.cs">
       <DependentUpon>LyricSelector.cs</DependentUpon>
     </Compile>
+    <Compile Include="MicControl.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MicControl.Designer.cs">
+      <DependentUpon>MicControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="MIDISelector.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -219,6 +225,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="LyricSelector.resx">
       <DependentUpon>LyricSelector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MicControl.resx">
+      <DependentUpon>MicControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MIDISelector.resx">
       <DependentUpon>MIDISelector.cs</DependentUpon>
@@ -319,6 +328,17 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NAudio.Core">
+      <Version>2.2.1</Version>
+    </PackageReference>
+    <PackageReference Include="NAudio.WinForms">
+      <Version>2.2.1</Version>
+    </PackageReference>
+    <PackageReference Include="NAudio.WinMM">
+      <Version>2.2.1</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

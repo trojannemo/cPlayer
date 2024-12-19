@@ -25,6 +25,7 @@ using NautilusFREE;
 using static cPlayer.YARGSongFileStream;
 using Un4seen.Bass.AddOn.Enc;
 using System.Runtime.InteropServices;
+using NAudio.Wave;
 
 namespace cPlayer
 {
@@ -163,6 +164,11 @@ namespace cPlayer
         public string activeM4AFile;
         private KaraokeOverlayForm KaraokeOverlay;
         private gifOverlay GIFOverlay;
+        private WaveInEvent waveIn;
+        private WaveOutEvent waveOut;
+        private BufferedWaveProvider bufferedWaveProvider;
+        public VolumeWaveProvider16 volumeProvider;
+        public int microphoneIndex = -1;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -315,8 +321,71 @@ namespace cPlayer
             ActiveSongData = new SongData();
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
             this.UpdateStyles();
-        }               
+        }
 
+        public void StartPassthrough(int deviceIndex, int volume)
+        {
+            try
+            {
+                // Initialize microphone input
+                waveIn = new WaveInEvent
+                {
+                    DeviceNumber = deviceIndex,
+                    WaveFormat = new WaveFormat(44100, 1), // 44.1kHz, mono
+                    BufferMilliseconds = 10 // Reduce buffer size
+                };
+                waveIn.DataAvailable += WaveIn_DataAvailable;
+
+                // Initialize buffered wave provider
+                bufferedWaveProvider = new BufferedWaveProvider(waveIn.WaveFormat)
+                {
+                    BufferDuration = TimeSpan.FromSeconds(50), // Optional: Adjust as needed
+                    DiscardOnBufferOverflow = true
+                };
+
+                // Initialize volume provider
+                volumeProvider = new VolumeWaveProvider16(bufferedWaveProvider)
+                {
+                    Volume = volume / 100f // Set initial volume
+                };
+
+                // Initialize speaker output with reduced latency
+                waveOut = new WaveOutEvent
+                {
+                    DesiredLatency = 50 // Lower playback latency
+                };
+                waveOut.Init(volumeProvider);
+
+                // Start processing
+                waveIn.StartRecording();
+                waveOut.Play();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error starting passthrough: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                StopPassthrough();
+            }
+        }
+
+        public void StopPassthrough()
+        {
+            waveIn?.StopRecording();
+            waveIn?.Dispose();
+            waveIn = null;
+
+            waveOut?.Stop();
+            waveOut?.Dispose();
+            waveOut = null;
+        }
+
+        private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
+        {
+            // Write data to the buffered wave provider
+            if (bufferedWaveProvider != null)
+            {
+                bufferedWaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
+            }
+        }
         private bool MonitorApplicationFocus()
         {
             IntPtr foregroundWindow = GetForegroundWindow();
@@ -2484,6 +2553,7 @@ namespace cPlayer
                 Log("Yes");
             }
             isClosing = true;
+            StopPassthrough();
             StopPlayback();
             Bass.BASS_Free();
             SaveConfig();
@@ -8035,6 +8105,13 @@ namespace cPlayer
             }
             if (!GIFOverlay.Visible) return;
             UpdateOverlayPosition();
+        }
+
+        private void microphoneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selector = new MicControl(this);
+            selector.Show();
+            Log("Displayed Microphone Control form");
         }
     }
 
