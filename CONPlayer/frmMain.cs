@@ -26,6 +26,7 @@ using static cPlayer.YARGSongFileStream;
 using Un4seen.Bass.AddOn.Enc;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
+using NAudio.Dsp;
 
 namespace cPlayer
 {
@@ -339,7 +340,7 @@ namespace cPlayer
                 // Initialize buffered wave provider
                 bufferedWaveProvider = new BufferedWaveProvider(waveIn.WaveFormat)
                 {
-                    BufferDuration = TimeSpan.FromSeconds(50), // Optional: Adjust as needed
+                    BufferDuration = TimeSpan.FromSeconds(1), // Optional: Adjust as needed
                     DiscardOnBufferOverflow = true
                 };
 
@@ -378,14 +379,21 @@ namespace cPlayer
             waveOut = null;
         }
 
+        private BiQuadFilter highPassFilter = BiQuadFilter.HighPassFilter(44100, 100, 1); // 100 Hz cutoff, Q factor 1
         private void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
-            // Write data to the buffered wave provider
-            if (bufferedWaveProvider != null)
+            // Apply the high-pass filter to each sample
+            var buffer = new float[e.BytesRecorded / 2];
+            for (int i = 0; i < buffer.Length; i++)
             {
-                bufferedWaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
+                short sample = BitConverter.ToInt16(e.Buffer, i * 2);
+                buffer[i] = highPassFilter.Transform(sample / 32768f) * 32768;
             }
+
+            // Write processed samples to the buffer
+            bufferedWaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
         }
+
         private bool MonitorApplicationFocus()
         {
             IntPtr foregroundWindow = GetForegroundWindow();
