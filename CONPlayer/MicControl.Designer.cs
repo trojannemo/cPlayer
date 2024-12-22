@@ -39,7 +39,6 @@
             // 
             // lstMicrophones
             // 
-            this.lstMicrophones.BackColor = System.Drawing.Color.White;
             this.lstMicrophones.FormattingEnabled = true;
             this.lstMicrophones.Location = new System.Drawing.Point(12, 31);
             this.lstMicrophones.Name = "lstMicrophones";
@@ -101,7 +100,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.White;
+            this.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
             this.ClientSize = new System.Drawing.Size(292, 242);
             this.Controls.Add(this.btnHelp);
             this.Controls.Add(this.btnDeselect);

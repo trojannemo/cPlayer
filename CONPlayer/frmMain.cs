@@ -27,6 +27,9 @@ using Un4seen.Bass.AddOn.Enc;
 using System.Runtime.InteropServices;
 using NAudio.Wave;
 using NAudio.Dsp;
+using cPlayer.StageKit;
+using SlimDX.XInput;
+using NAudio.SoundFont;
 
 namespace cPlayer
 {
@@ -170,6 +173,52 @@ namespace cPlayer
         private BufferedWaveProvider bufferedWaveProvider;
         public VolumeWaveProvider16 volumeProvider;
         public int microphoneIndex = -1;
+        private StageKitController stageKit;
+        private LedDisplay ledDisplay;
+        private Instrument skActiveInstrument;
+        private LED redLED1 = new LED() { Index = 0, Color = LEDColor.Red };
+        private LED redLED2 = new LED() { Index = 1, Color = LEDColor.Red };
+        private LED redLED3 = new LED() { Index = 2, Color = LEDColor.Red };
+        private LED redLED4 = new LED() { Index = 3, Color = LEDColor.Red };
+        private LED redLED5 = new LED() { Index = 4, Color = LEDColor.Red };
+        private LED redLED6 = new LED() { Index = 5, Color = LEDColor.Red };
+        private LED redLED7 = new LED() { Index = 6, Color = LEDColor.Red };
+        private LED redLED8 = new LED() { Index = 7, Color = LEDColor.Red };
+        private LED yellowLED1 = new LED() { Index = 0, Color = LEDColor.Yellow };
+        private LED yellowLED2 = new LED() { Index = 1, Color = LEDColor.Yellow };
+        private LED yellowLED3 = new LED() { Index = 2, Color = LEDColor.Yellow };
+        private LED yellowLED4 = new LED() { Index = 3, Color = LEDColor.Yellow };
+        private LED yellowLED5 = new LED() { Index = 4, Color = LEDColor.Yellow };
+        private LED yellowLED6 = new LED() { Index = 5, Color = LEDColor.Yellow };
+        private LED yellowLED7 = new LED() { Index = 6, Color = LEDColor.Yellow };
+        private LED yellowLED8 = new LED() { Index = 7, Color = LEDColor.Yellow };
+        private LED greenLED1 = new LED() { Index = 0, Color = LEDColor.Green };
+        private LED greenLED2 = new LED() { Index = 1, Color = LEDColor.Green };
+        private LED greenLED3 = new LED() { Index = 2, Color = LEDColor.Green };
+        private LED greenLED4 = new LED() { Index = 3, Color = LEDColor.Green };
+        private LED greenLED5 = new LED() { Index = 4, Color = LEDColor.Green };
+        private LED greenLED6 = new LED() { Index = 5, Color = LEDColor.Green };
+        private LED greenLED7 = new LED() { Index = 6, Color = LEDColor.Green };
+        private LED greenLED8 = new LED() { Index = 7, Color = LEDColor.Green };
+        private LED blueLED1 = new LED() { Index = 0, Color = LEDColor.Blue };
+        private LED blueLED2 = new LED() { Index = 1, Color = LEDColor.Blue };
+        private LED blueLED3 = new LED() { Index = 2, Color = LEDColor.Blue };
+        private LED blueLED4 = new LED() { Index = 3, Color = LEDColor.Blue };
+        private LED blueLED5 = new LED() { Index = 4, Color = LEDColor.Blue };
+        private LED blueLED6 = new LED() { Index = 5, Color = LEDColor.Blue };
+        private LED blueLED7 = new LED() { Index = 6, Color = LEDColor.Blue };
+        private LED blueLED8 = new LED() { Index = 7, Color = LEDColor.Blue };
+        private LED strobe = new LED() { Index = 0, Color = LEDColor.White };
+        private readonly List<LED> LEDs;
+        private int activeBlueLED = 0;
+        private int activeYellowLED = 0;
+        private int activeRedLED = 0;
+        private int activeGreenLED = 0;
+        private Rectangle skDrums;
+        private Rectangle skBass;
+        private Rectangle skGuitar;
+        private Rectangle skKeys;
+        private Rectangle skProKeys;
 
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
@@ -322,6 +371,11 @@ namespace cPlayer
             ActiveSongData = new SongData();
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
             this.UpdateStyles();
+            ledDisplay = new LedDisplay();
+            LEDs = new List<LED>() { redLED1, redLED2, redLED3, redLED4, redLED5, redLED6, redLED7, redLED8,
+                                     greenLED1, greenLED2, greenLED3, greenLED4, greenLED5,greenLED6, greenLED7, greenLED8,
+                                    yellowLED1, yellowLED2, yellowLED3, yellowLED4, yellowLED5, yellowLED6, yellowLED7, yellowLED8,
+                                    blueLED1, blueLED2, blueLED3, blueLED4, blueLED5, blueLED6,blueLED7,blueLED8, strobe};
         }
 
         public void StartPassthrough(int deviceIndex, int volume)
@@ -465,7 +519,19 @@ namespace cPlayer
 
         private void frmMain_MouseMove(object sender, MouseEventArgs e)
         {
-            if (Cursor != Cursors.NoMove2D) return;
+            if (Cursor != Cursors.NoMove2D)
+            {
+                if (stageKit != null && (skDrums.Contains(e.Location) || skBass.Contains(e.Location) || skGuitar.Contains(e.Location) ||
+                    skKeys.Contains(e.Location) || skProKeys.Contains(e.Location)))
+                {
+                    Cursor = Cursors.Hand;
+                }
+                else
+                {
+                    Cursor = Cursors.Default;
+                }
+                return;
+            }
             if (MousePosition.X != mouseX)
             {
                 if (MousePosition.X > mouseX)
@@ -2563,6 +2629,7 @@ namespace cPlayer
             isClosing = true;
             StopPassthrough();
             StopPlayback();
+            StopStageKit();
             Bass.BASS_Free();
             SaveConfig();
             DeleteUsedFiles();
@@ -2665,6 +2732,7 @@ namespace cPlayer
 
         private void DoClickStop()
         {
+            StopStageKit();
             StopBASS();
             PlaybackTimer.Enabled = false;
             ClearVisuals();
@@ -3312,7 +3380,7 @@ namespace cPlayer
             if (MIDITools.MIDI_Chart.Drums.ChartedNotes.Count > 0 && doMIDIDrums)
             {
                 track_y += track_height;
-                DrawTrackBackground(graphics, track_y, track_height, track_color, "DRUMS", MIDITools.MIDI_Chart.Drums.Solos);
+                DrawTrackBackground(graphics, track_y, track_height, track_color, "DRUMS", MIDITools.MIDI_Chart.Drums.Solos, skActiveInstrument == Instrument.Drums, Instrument.Drums);
                 DrawNotes(graphics, MIDITools.MIDI_Chart.Drums, track_height, track_y, true, -1, out Index);
                 MIDITools.MIDI_Chart.Drums.ActiveIndex = Index;
                 track_color++;
@@ -3320,7 +3388,7 @@ namespace cPlayer
             if (MIDITools.MIDI_Chart.Bass.ChartedNotes.Count > 0 && doMIDIBass)
             {
                 track_y += track_height;
-                DrawTrackBackground(graphics, track_y, track_height, track_color, PlayingSong.isRhythmOnBass ? "RHYTHM GUITAR" : "BASS", MIDITools.MIDI_Chart.Bass.Solos);
+                DrawTrackBackground(graphics, track_y, track_height, track_color, PlayingSong.isRhythmOnBass ? "RHYTHM GUITAR" : "BASS", MIDITools.MIDI_Chart.Bass.Solos, skActiveInstrument == Instrument.Bass, Instrument.Bass);
                 DrawNotes(graphics, MIDITools.MIDI_Chart.Bass, track_height, track_y, false, -1, out Index);
                 MIDITools.MIDI_Chart.Bass.ActiveIndex = Index;
                 track_color++;
@@ -3328,7 +3396,7 @@ namespace cPlayer
             if (MIDITools.MIDI_Chart.Guitar.ChartedNotes.Count > 0 && doMIDIGuitar)
             {
                 track_y += track_height;
-                DrawTrackBackground(graphics, track_y, track_height, track_color, "GUITAR", MIDITools.MIDI_Chart.Guitar.Solos);
+                DrawTrackBackground(graphics, track_y, track_height, track_color, "GUITAR", MIDITools.MIDI_Chart.Guitar.Solos, skActiveInstrument == Instrument.Guitar, Instrument.Guitar);
                 DrawNotes(graphics, MIDITools.MIDI_Chart.Guitar, track_height, track_y, false, -1, out Index);
                 MIDITools.MIDI_Chart.Guitar.ActiveIndex = Index;
                 track_color++;
@@ -3341,7 +3409,7 @@ namespace cPlayer
                     multKeys = tall;
                 }
                 track_y += track_height * multKeys;
-                DrawTrackBackground(graphics, track_y, track_height * multKeys, track_color, "PRO KEYS", MIDITools.MIDI_Chart.ProKeys.Solos);
+                DrawTrackBackground(graphics, track_y, track_height * multKeys, track_color, "PRO KEYS", MIDITools.MIDI_Chart.ProKeys.Solos, skActiveInstrument == Instrument.ProKeys, Instrument.ProKeys);
                 DrawNotes(graphics, MIDITools.MIDI_Chart.ProKeys, track_height * multKeys, track_y, false, -1, out Index);
                 MIDITools.MIDI_Chart.ProKeys.ActiveIndex = Index;
                 track_color++;
@@ -3349,7 +3417,7 @@ namespace cPlayer
             else if (MIDITools.MIDI_Chart.Keys.ChartedNotes.Count > 0 && doMIDIKeys)
             {
                 track_y += track_height;
-                DrawTrackBackground(graphics, track_y, track_height, track_color, PlayingSong.isRhythmOnKeys ? "RHYTHM GUITAR" : "KEYS", MIDITools.MIDI_Chart.Keys.Solos);
+                DrawTrackBackground(graphics, track_y, track_height, track_color, PlayingSong.isRhythmOnKeys ? "RHYTHM GUITAR" : "KEYS", MIDITools.MIDI_Chart.Keys.Solos, skActiveInstrument == Instrument.Keys, Instrument.Keys );
                 DrawNotes(graphics, MIDITools.MIDI_Chart.Keys, track_height, track_y, false, -1, out Index);
                 MIDITools.MIDI_Chart.Keys.ActiveIndex = Index;
                 track_color++;
@@ -3361,7 +3429,7 @@ namespace cPlayer
                 multVocals = tall;
             }
             track_y += track_height * multVocals;
-            DrawTrackBackground(graphics, track_y, track_height * multVocals, track_color, MIDITools.MIDI_Chart.Harm1.ChartedNotes.Any() && doMIDIHarmonies ? "HARMONIES" : "VOCALS", null);
+            DrawTrackBackground(graphics, track_y, track_height * multVocals, track_color, MIDITools.MIDI_Chart.Harm1.ChartedNotes.Any() && doMIDIHarmonies ? "HARMONIES" : "VOCALS", null, false, Instrument.Vocals);
             if (chartSnippet.Checked)
             {
                 DrawPhraseMarkers(graphics, MIDITools.PhrasesVocals, track_height * multVocals, track_y);
@@ -3413,7 +3481,7 @@ namespace cPlayer
             }
         }
 
-        private void DrawTrackBackground(Graphics graphics, int y, int height, int index, string name, ICollection<SpecialMarker> solos)
+        private void DrawTrackBackground(Graphics graphics, int y, int height, int index, string name, ICollection<SpecialMarker> solos, bool doHighlight, Instrument instrument)
         {
             if (!chartSnippet.Checked) return;
             var is_solo = false;
@@ -3438,7 +3506,9 @@ namespace cPlayer
                     graphics.FillRectangle(DrawingPen, 0, y - height, picVisuals.Width, height);
                 }
             }
-            if (!doMIDINameTracks) return;
+
+            var rectangle = new Rectangle(0, y - height, picVisuals.Width, height);
+
             Font font;
             try
             {
@@ -3448,8 +3518,34 @@ namespace cPlayer
             {
                 font = new Font("Times New Roman", 10, FontStyle.Bold);
             }
-            var rectangle = new Rectangle(0, y - height, picVisuals.Width, height);
-            TextRenderer.DrawText(graphics, name + (is_solo ? " SOLO!" : ""), font, rectangle, index % 2 == 0 ? TrackBackgroundColor1 : TrackBackgroundColor2, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            var trackText = name + (is_solo ? " SOLO!" : "");
+            // Measure the size of the text
+            Size textSize = TextRenderer.MeasureText(graphics, trackText, font, rectangle.Size, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+
+            // Calculate the rectangle for the text
+            int x = rectangle.X + (rectangle.Width - textSize.Width) / 2;
+            int y2 = rectangle.Y + (rectangle.Height - textSize.Height) / 2;
+
+            Rectangle textRectangle = new Rectangle(x - 4, y2, textSize.Width + 4, textSize.Height + 4);
+
+            switch (instrument)
+            {
+                case Instrument.Drums: skDrums = textRectangle; break;
+                case Instrument.Bass: skBass = textRectangle; break;
+                case Instrument.Guitar: skGuitar = textRectangle; break;
+                case Instrument.Keys: skKeys = textRectangle; break;
+                case Instrument.ProKeys: skProKeys = textRectangle; break;
+            }
+
+            if (!doMIDINameTracks) return;
+            TextRenderer.DrawText(graphics, trackText, font, rectangle, index % 2 == 0 ? TrackBackgroundColor1 : TrackBackgroundColor2, TextFormatFlags.VerticalCenter | TextFormatFlags.HorizontalCenter);
+            if (doHighlight && stageKit != null)
+            {
+                using (Pen outlinePen = new Pen(Color.Goldenrod, 2))
+                {
+                    graphics.DrawRectangle(outlinePen, textRectangle);
+                }
+            }
         }
 
         private void DrawNotes(Graphics graphics, MIDITrack track, int track_height, int track_y, bool drums, int harm, out int LastPlayedIndex)
@@ -3646,12 +3742,227 @@ namespace cPlayer
                                 Log("Error drawing vocal slide: " + ex.Message);
                             }
                         }
+
+                        if (stageKit != null && note.NoteStart <= correctedTime + 0.1)
+                        {
+                            if (skActiveInstrument == Instrument.Drums && track.Name == "Drums" ||
+                                skActiveInstrument == Instrument.Bass && track.Name == "Bass" ||
+                                skActiveInstrument == Instrument.Guitar && track.Name == "Guitar" ||
+                                skActiveInstrument == Instrument.Keys && track.Name == "Keys")
+                            {
+                                GetLEDColorIndex(GetLEDColor(note.NoteColor, track.Name == "Drums"));
+                            }
+                            else if (skActiveInstrument == Instrument.ProKeys && track.Name == "ProKeys")
+                            {
+                                GetLEDColorIndexProKeys(note.NoteNumber);
+                            }
+                        }
+
                         if ((!doMIDINameVocals || (track.Name != "Vocals" && track.Name != "Harm1" && (track.Name != "Harm2" && track.Name != "Harm3"))) && (!doMIDINameProKeys || track.Name != "ProKeys")) continue;
                         var font = new Font("Impact", 12.0f);
                         TextRenderer.DrawText(graphics, note.NoteName, font, new Point((int)left + 1, y - 1), !doMIDIBWKeys || track.Name != "ProKeys" ? Color.White : (note.NoteName.Contains("#") ? Color.White : Color.Black), TextFormatFlags.NoPadding);
                     }
                 }
             }
+        }
+
+        private void GetLEDColorIndexProKeys(int note)
+        {
+            switch (note - 12)
+            {
+                case 36:
+                case 37:
+                case 38:
+                case 39:
+                case 40://red
+                    GetLEDColorIndex(LEDColor.Red);
+                    break;
+                case 41:
+                case 42:
+                case 43:
+                case 44:
+                case 45:
+                case 46:
+                case 47://yellow
+                    GetLEDColorIndex(LEDColor.Yellow);
+                    break;
+                case 48:
+                case 49:
+                case 50:
+                case 51:
+                case 52://blue
+                    GetLEDColorIndex(LEDColor.Blue);
+                    break;
+                case 53:
+                case 54:
+                case 55:
+                case 56:
+                case 57:
+                case 58:
+                case 59: //green
+                    GetLEDColorIndex(LEDColor.Green);
+                    break;
+                case 60: //orange
+                    GetLEDColorIndex(LEDColor.Orange);
+                    break;
+            }
+        }
+
+        private void DisplayRedLed(int index, ref LedDisplay display, bool state)
+        {
+            switch (index)
+            {
+                case 0: stageKit.DisplayRedLed1(ref display, state); break;
+                case 1: stageKit.DisplayRedLed2(ref display, state); break;
+                case 2: stageKit.DisplayRedLed3(ref display, state); break;
+                case 3: stageKit.DisplayRedLed4(ref display, state); break;
+                case 4: stageKit.DisplayRedLed5(ref display, state); break;
+                case 5: stageKit.DisplayRedLed6(ref display, state); break;
+                case 6: stageKit.DisplayRedLed7(ref display, state); break;
+                case 7: stageKit.DisplayRedLed8(ref display, state); break;
+            }
+        }
+
+        private void DisplayGreenLed(int index, ref LedDisplay display, bool state)
+        {
+            switch (index)
+            {
+                case 0: stageKit.DisplayGreenLed1(ref display, state); break;
+                case 1: stageKit.DisplayGreenLed2(ref display, state); break;
+                case 2: stageKit.DisplayGreenLed3(ref display, state); break;
+                case 3: stageKit.DisplayGreenLed4(ref display, state); break;
+                case 4: stageKit.DisplayGreenLed5(ref display, state); break;
+                case 5: stageKit.DisplayGreenLed6(ref display, state); break;
+                case 6: stageKit.DisplayGreenLed7(ref display, state); break;
+                case 7: stageKit.DisplayGreenLed8(ref display, state); break;
+            }
+        }
+
+        private void DisplayYellowLed(int index, ref LedDisplay display, bool state)
+        {
+            switch (index)
+            {
+                case 0: stageKit.DisplayYellowLed1(ref display, state); break;
+                case 1: stageKit.DisplayYellowLed2(ref display, state); break;
+                case 2: stageKit.DisplayYellowLed3(ref display, state); break;
+                case 3: stageKit.DisplayYellowLed4(ref display, state); break;
+                case 4: stageKit.DisplayYellowLed5(ref display, state); break;
+                case 5: stageKit.DisplayYellowLed6(ref display, state); break;
+                case 6: stageKit.DisplayYellowLed7(ref display, state); break;
+                case 7: stageKit.DisplayYellowLed8(ref display, state); break;
+            }
+        }
+
+        private void DisplayBlueLed(int index, ref LedDisplay display, bool state)
+        {
+            switch (index)
+            {
+                case 0: stageKit.DisplayBlueLed1(ref display, state); break;
+                case 1: stageKit.DisplayBlueLed2(ref display, state); break;
+                case 2: stageKit.DisplayBlueLed3(ref display, state); break;
+                case 3: stageKit.DisplayBlueLed4(ref display, state); break;
+                case 4: stageKit.DisplayBlueLed5(ref display, state); break;
+                case 5: stageKit.DisplayBlueLed6(ref display, state); break;
+                case 6: stageKit.DisplayBlueLed7(ref display, state); break;
+                case 7: stageKit.DisplayBlueLed8(ref display, state); break;
+            }
+        }
+
+        private void UpdateLED(LED led, bool enabled)
+        {
+            if (stageKit == null || ledDisplay == null) return;
+
+            if (enabled && !led.Enabled)
+            {
+                led.Enabled = true;
+                led.Time = DateTime.Now.AddMilliseconds(150);
+
+                // Call the appropriate display method based on color and index
+                switch (led.Color)
+                {
+                    case LEDColor.Red:
+                        DisplayRedLed(led.Index, ref ledDisplay, true);
+                        break;
+                    case LEDColor.Green:
+                        DisplayGreenLed(led.Index, ref ledDisplay, true);
+                        break;
+                    case LEDColor.Yellow:
+                        DisplayYellowLed(led.Index, ref ledDisplay, true);
+                        break;
+                    case LEDColor.Blue:
+                        DisplayBlueLed(led.Index, ref ledDisplay, true);
+                        break;
+                    case LEDColor.White:
+                        stageKit.TurnStrobeOn(StrobeSpeed.Medium);
+                        break;
+                }
+            }
+            else if (!enabled && led.Enabled)
+            {
+                led.Enabled = false;
+
+                // Call the appropriate display method based on color and index
+                switch (led.Color)
+                {
+                    case LEDColor.Red:
+                        DisplayRedLed(led.Index, ref ledDisplay, false);
+                        break;
+                    case LEDColor.Green:
+                        DisplayGreenLed(led.Index, ref ledDisplay, false);
+                        break;
+                    case LEDColor.Yellow:
+                        DisplayYellowLed(led.Index, ref ledDisplay, false);
+                        break;
+                    case LEDColor.Blue:
+                        DisplayBlueLed(led.Index, ref ledDisplay, false);
+                        break;
+                    case LEDColor.White:
+                        stageKit.TurnStrobeOff();
+                        break;
+                }
+            }
+        }
+
+        private void GetLEDColorIndex(LEDColor color)
+        {
+            switch (color)
+            {
+                case LEDColor.Red:
+                    activeRedLED = (activeRedLED + 1) % 8;
+                    UpdateLED(LEDs[activeRedLED], true);
+                    break;
+                case LEDColor.Green:
+                    activeGreenLED = (activeGreenLED + 1) % 8;
+                    UpdateLED(LEDs[activeGreenLED + 8], true);
+                    break;
+                case LEDColor.Yellow:
+                    activeYellowLED = (activeYellowLED + 1) % 8;
+                    UpdateLED(LEDs[activeYellowLED + 16], true);
+                    break;
+                case LEDColor.Blue:
+                    activeBlueLED = (activeBlueLED + 1) % 8;
+                    UpdateLED(LEDs[activeBlueLED + 24], true);
+                    break;
+                case LEDColor.Orange:
+                    activeRedLED = (activeRedLED + 1) % 8;
+                    activeYellowLED = (activeYellowLED + 1) % 8;
+                    UpdateLED(LEDs[activeRedLED], true);
+                    UpdateLED(LEDs[activeYellowLED + 16], true);
+                    break;
+                case LEDColor.White:
+                    UpdateLED(LEDs[32], true);
+                    break;
+            }
+        }
+
+        private LEDColor GetLEDColor(Color color, bool drums = false)
+        {
+            if (color == ChartRed) return LEDColor.Red;
+            if (color == ChartBlue) return LEDColor.Blue;
+            if (color == ChartYellow) return LEDColor.Yellow;
+            if (color == ChartGreen) return LEDColor.Green;
+            if (color == ChartOrange) return drums ? LEDColor.White : LEDColor.Orange;
+            return LEDColor.Red;//default
         }
 
         private Color GetNoteColor(int note_number, bool drums = false)
@@ -3887,7 +4198,8 @@ namespace cPlayer
                 nautilus.ReleaseStreamHandle(true);
                 CurrentSongAudio = nautilus.PlayingSongOggData;
                 return;
-            }            
+            }
+            Tools.DeleteFile(CurrentSongArt);//delete left over from old song if this song doesn't have album art
             Tools.MoveFile(NextSongArtPNG, CurrentSongArt);
             if (nautilus.NextSongOggData != null && nautilus.NextSongOggData.Length > 0)
             {
@@ -5500,6 +5812,17 @@ namespace cPlayer
             {                
                 if (Bass.BASS_ChannelIsActive(BassMixer) == BASSActive.BASS_ACTIVE_PLAYING)
                 {
+                    if (stageKit != null)
+                    {
+                        foreach (var led in LEDs)
+                        {
+                            if (DateTime.Now > led.Time && led.Enabled)
+                            {
+                                UpdateLED(led, false); // Turn off LED
+                            }
+                        }
+                    }
+
                     // the stream is still playing...                    
                     var pos = Bass.BASS_ChannelGetPosition(BassStream); // position in bytes
                     PlaybackSeconds = Bass.BASS_ChannelBytes2Seconds(BassStream, pos); // the elapsed time length                   
@@ -6308,6 +6631,7 @@ namespace cPlayer
             {
                 Log("Error stopping playback: " + ex.Message);
             }
+            StopStageKit();
             btnPlayPause.Text = "PLAY";
             btnPlayPause.Tag = "play";
             toolTip1.SetToolTip(btnPlayPause, "Play");
@@ -6433,7 +6757,7 @@ namespace cPlayer
             MediaPlayer.Width = picVisuals.Width;
             if (displayMIDIChartVisuals.Checked)
             {
-                PlaybackTimer.Interval = 15;
+                PlaybackTimer.Interval = 16;
             }
             else if (displayKaraokeMode.Checked)
             {
@@ -7410,7 +7734,7 @@ namespace cPlayer
 
                 var left = (int)(((lyric.LyricStart - time) / PlaybackWindow) * picVisuals.Width);
 
-                using (var textBrush = new SolidBrush(foreColor))
+                using (var textBrush = new SolidBrush(displayMIDIChartVisuals.Checked ? foreColor : Color.Black))
                 {
                     graphics.DrawString(ProcessLine(lyric.LyricText, true), font, textBrush, new PointF(left, posY - 4));
                 }
@@ -8121,6 +8445,150 @@ namespace cPlayer
             selector.Show();
             Log("Displayed Microphone Control form");
         }
+
+        private void stageKitToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            var isChecked = stageKitToolStripMenuItem.Checked;
+            if (!isChecked)
+            {
+                StopStageKit();
+            }
+            controller1.Enabled = isChecked;
+            controller2.Enabled = isChecked;
+            controller3.Enabled = isChecked;
+            controller4.Enabled = isChecked;
+        }
+
+        private void StopStageKit()
+        {
+            if (stageKit == null) return;
+            try
+            {
+                stageKit.TurnAllOff();
+            }
+            catch (Exception)
+            { }
+        }
+
+        private void SelectStageKitController(UserIndex index)
+        {
+            try
+            {
+                stageKit = new StageKitController(((int)index) + 1);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error creating Stage Kit controller:\n" + ex.Message, AppName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void UncheckAllStageKits()
+        {
+            StopStageKit();
+            controller1.Checked = false;
+            controller2.Checked = false;
+            controller3.Checked = false;
+            controller4.Checked = false;
+        }
+
+        private void controller1_Click(object sender, EventArgs e)
+        {
+            UncheckAllStageKits();
+            controller1.Checked = true;
+            SelectStageKitController(UserIndex.One);
+        }
+
+        private void controller2_Click(object sender, EventArgs e)
+        {
+            UncheckAllStageKits();
+            controller2.Checked = true;
+            SelectStageKitController(UserIndex.Two);
+        }
+
+        private void controller3_Click(object sender, EventArgs e)
+        {
+            UncheckAllStageKits();
+            controller3.Checked = true;
+            SelectStageKitController(UserIndex.Three);
+        }
+
+        private void controller4_Click(object sender, EventArgs e)
+        {
+            UncheckAllStageKits();
+            controller4.Checked = true;
+            SelectStageKitController(UserIndex.Four);
+        }
+
+        private void picVisuals_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (stageKit == null) return;
+            try
+            {
+                if (skDrums.Contains(e.Location))
+                {
+                    if (stageKit != null)
+                    {
+                        stageKit.TurnAllOff();//reset for the next instrument
+                    }
+                    skActiveInstrument = Instrument.Drums;
+                    var toast = new ToastNotification("Stage Kit lighting assigned to drums chart");
+                    toast.ShowToast(3000); // Display for 3 seconds
+                }
+                else if (skBass.Contains(e.Location))
+                {
+                    if (stageKit != null)
+                    {
+                        stageKit.TurnAllOff();//reset for the next instrument
+                    }
+                    skActiveInstrument = Instrument.Bass;
+                    var toast = new ToastNotification("Stage Kit lighting assigned to bass chart");
+                    toast.ShowToast(3000); // Display for 3 seconds
+                }
+                else if (skGuitar.Contains(e.Location))
+                {
+                    if (stageKit != null)
+                    {
+                        stageKit.TurnAllOff();//reset for the next instrument
+                    }
+                    skActiveInstrument = Instrument.Guitar;
+                    var toast = new ToastNotification("Stage Kit lighting assigned to guitar chart");
+                    toast.ShowToast(3000); // Display for 3 seconds
+                }
+                else if (skKeys.Contains(e.Location))
+                {
+                    if (stageKit != null)
+                    {
+                        stageKit.TurnAllOff();//reset for the next instrument
+                    }
+                    skActiveInstrument = Instrument.Keys;
+                    var toast = new ToastNotification("Stage Kit lighting assigned to keys chart");
+                    toast.ShowToast(3000); // Display for 3 seconds
+                }
+                else if (skProKeys.Contains(e.Location))
+                {
+                    if (stageKit != null)
+                    {
+                        stageKit.TurnAllOff();//reset for the next instrument
+                    }
+                    skActiveInstrument = Instrument.ProKeys;
+                    var toast = new ToastNotification("Stage Kit lighting assigned to pro keys chart");
+                    toast.ShowToast(3000); // Display for 3 seconds
+                }
+            }
+            catch (Exception)
+            {
+                //
+            }
+        }
+
+        private void stageKitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (stageKit != null && !stageKitToolStripMenuItem.Checked)
+            {
+                UncheckAllStageKits();
+                stageKit = null;
+            }
+        }
     }
 
     public class ActiveWord
@@ -8135,7 +8603,28 @@ namespace cPlayer
             WordStart = wordStart;
             WordEnd = wordEnd;
         }
-    }      
+    }
+
+    public enum LEDColor
+    {
+        Red, Green, Yellow, Blue, White, Orange
+    }
+
+    public enum Instrument
+    {
+        Drums, Bass, Guitar, Keys, ProKeys, Vocals
+    }
+
+    public class LED
+    {
+        public int Index { get; set; }
+
+        public bool Enabled { get; set; }
+
+        public DateTime Time { get; set; }
+
+        public LEDColor Color { get; set; }
+    }
 
     public class Song
     {

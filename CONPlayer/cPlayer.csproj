@@ -101,6 +101,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>bin\Debug\bin\SharpMp4Parser.dll</HintPath>
     </Reference>
+    <Reference Include="SlimDX">
+      <HintPath>C:\Users\Yemil-PC\source\repos\cPlayerBright\cPlayerBright\CONPlayer\bin\Debug\SlimDX.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -175,6 +178,16 @@
     <Compile Include="SectionSelector.Designer.cs">
       <DependentUpon>SectionSelector.cs</DependentUpon>
     </Compile>
+    <Compile Include="Stage Kit\GamePad.cs" />
+    <Compile Include="Stage Kit\LedColor.cs" />
+    <Compile Include="Stage Kit\LedDisplay.cs" />
+    <Compile Include="Stage Kit\StageKitController.cs" />
+    <Compile Include="ToastNotification.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToastNotification.Designer.cs">
+      <DependentUpon>ToastNotification.cs</DependentUpon>
+    </Compile>
     <Compile Include="Updater.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -247,6 +260,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SectionSelector.resx">
       <DependentUpon>SectionSelector.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToastNotification.resx">
+      <DependentUpon>ToastNotification.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Updater.resx">
       <DependentUpon>Updater.cs</DependentUpon>

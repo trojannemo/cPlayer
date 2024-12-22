@@ -86,6 +86,13 @@ namespace cPlayer
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripSeparator();
             this.uploadScreenshots = new System.Windows.Forms.ToolStripMenuItem();
             this.openSideWindow = new System.Windows.Forms.ToolStripMenuItem();
+            this.equipmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.microphoneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.stageKitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.controller1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.controller2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.controller3 = new System.Windows.Forms.ToolStripMenuItem();
+            this.controller4 = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.howToUseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem10 = new System.Windows.Forms.ToolStripSeparator();
@@ -178,9 +185,6 @@ namespace cPlayer
             this.Uploader = new System.ComponentModel.BackgroundWorker();
             this.updater = new System.ComponentModel.BackgroundWorker();
             this.gifTmr = new System.Windows.Forms.Timer(this.components);
-            this.equipmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.microphoneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stageKitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picVisuals)).BeginInit();
             this.picVisuals.SuspendLayout();
@@ -676,6 +680,77 @@ namespace cPlayer
             this.openSideWindow.Text = "Open side window";
             this.openSideWindow.Click += new System.EventHandler(this.openSideWindow_Click);
             // 
+            // equipmentToolStripMenuItem
+            // 
+            this.equipmentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.microphoneToolStripMenuItem,
+            this.stageKitToolStripMenuItem});
+            this.equipmentToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.equipmentToolStripMenuItem.Name = "equipmentToolStripMenuItem";
+            this.equipmentToolStripMenuItem.Size = new System.Drawing.Size(77, 20);
+            this.equipmentToolStripMenuItem.Text = "&Equipment";
+            // 
+            // microphoneToolStripMenuItem
+            // 
+            this.microphoneToolStripMenuItem.BackColor = System.Drawing.Color.Black;
+            this.microphoneToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.microphoneToolStripMenuItem.Name = "microphoneToolStripMenuItem";
+            this.microphoneToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.microphoneToolStripMenuItem.Text = "Microphone";
+            this.microphoneToolStripMenuItem.Click += new System.EventHandler(this.microphoneToolStripMenuItem_Click);
+            // 
+            // stageKitToolStripMenuItem
+            // 
+            this.stageKitToolStripMenuItem.BackColor = System.Drawing.Color.Black;
+            this.stageKitToolStripMenuItem.CheckOnClick = true;
+            this.stageKitToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.controller1,
+            this.controller2,
+            this.controller3,
+            this.controller4});
+            this.stageKitToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.stageKitToolStripMenuItem.Name = "stageKitToolStripMenuItem";
+            this.stageKitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.stageKitToolStripMenuItem.Text = "Enable Stage Kit";
+            this.stageKitToolStripMenuItem.CheckedChanged += new System.EventHandler(this.stageKitToolStripMenuItem_CheckedChanged);
+            this.stageKitToolStripMenuItem.Click += new System.EventHandler(this.stageKitToolStripMenuItem_Click);
+            // 
+            // controller1
+            // 
+            this.controller1.BackColor = System.Drawing.Color.Black;
+            this.controller1.ForeColor = System.Drawing.Color.White;
+            this.controller1.Name = "controller1";
+            this.controller1.Size = new System.Drawing.Size(136, 22);
+            this.controller1.Text = "Controller 1";
+            this.controller1.Click += new System.EventHandler(this.controller1_Click);
+            // 
+            // controller2
+            // 
+            this.controller2.BackColor = System.Drawing.Color.Black;
+            this.controller2.ForeColor = System.Drawing.Color.White;
+            this.controller2.Name = "controller2";
+            this.controller2.Size = new System.Drawing.Size(136, 22);
+            this.controller2.Text = "Controller 2";
+            this.controller2.Click += new System.EventHandler(this.controller2_Click);
+            // 
+            // controller3
+            // 
+            this.controller3.BackColor = System.Drawing.Color.Black;
+            this.controller3.ForeColor = System.Drawing.Color.White;
+            this.controller3.Name = "controller3";
+            this.controller3.Size = new System.Drawing.Size(136, 22);
+            this.controller3.Text = "Controller 3";
+            this.controller3.Click += new System.EventHandler(this.controller3_Click);
+            // 
+            // controller4
+            // 
+            this.controller4.BackColor = System.Drawing.Color.Black;
+            this.controller4.ForeColor = System.Drawing.Color.White;
+            this.controller4.Name = "controller4";
+            this.controller4.Size = new System.Drawing.Size(136, 22);
+            this.controller4.Text = "Controller 4";
+            this.controller4.Click += new System.EventHandler(this.controller4_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -760,6 +835,7 @@ namespace cPlayer
             this.picVisuals.DragEnter += new System.Windows.Forms.DragEventHandler(this.lstPlaylist_DragEnter);
             this.picVisuals.Paint += new System.Windows.Forms.PaintEventHandler(this.picVisuals_Paint);
             this.picVisuals.DoubleClick += new System.EventHandler(this.panelVisuals_DoubleClick);
+            this.picVisuals.MouseClick += new System.Windows.Forms.MouseEventHandler(this.picVisuals_MouseClick);
             this.picVisuals.MouseDown += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseDown);
             this.picVisuals.MouseMove += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseMove);
             this.picVisuals.MouseUp += new System.Windows.Forms.MouseEventHandler(this.frmMain_MouseUp);
@@ -1670,33 +1746,6 @@ namespace cPlayer
             this.gifTmr.Interval = 16;
             this.gifTmr.Tick += new System.EventHandler(this.gifTmr_Tick);
             // 
-            // equipmentToolStripMenuItem
-            // 
-            this.equipmentToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.microphoneToolStripMenuItem,
-            this.stageKitToolStripMenuItem});
-            this.equipmentToolStripMenuItem.ForeColor = System.Drawing.Color.White;
-            this.equipmentToolStripMenuItem.Name = "equipmentToolStripMenuItem";
-            this.equipmentToolStripMenuItem.Size = new System.Drawing.Size(77, 20);
-            this.equipmentToolStripMenuItem.Text = "&Equipment";
-            // 
-            // microphoneToolStripMenuItem
-            // 
-            this.microphoneToolStripMenuItem.BackColor = System.Drawing.Color.Black;
-            this.microphoneToolStripMenuItem.ForeColor = System.Drawing.Color.White;
-            this.microphoneToolStripMenuItem.Name = "microphoneToolStripMenuItem";
-            this.microphoneToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.microphoneToolStripMenuItem.Text = "Microphone";
-            this.microphoneToolStripMenuItem.Click += new System.EventHandler(this.microphoneToolStripMenuItem_Click);
-            // 
-            // stageKitToolStripMenuItem
-            // 
-            this.stageKitToolStripMenuItem.BackColor = System.Drawing.Color.Black;
-            this.stageKitToolStripMenuItem.ForeColor = System.Drawing.Color.White;
-            this.stageKitToolStripMenuItem.Name = "stageKitToolStripMenuItem";
-            this.stageKitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.stageKitToolStripMenuItem.Text = "Stage Kit";
-            // 
             // frmMain
             // 
             this.AllowDrop = true;
@@ -1895,6 +1944,10 @@ namespace cPlayer
         private ToolStripMenuItem equipmentToolStripMenuItem;
         private ToolStripMenuItem microphoneToolStripMenuItem;
         private ToolStripMenuItem stageKitToolStripMenuItem;
+        private ToolStripMenuItem controller1;
+        private ToolStripMenuItem controller2;
+        private ToolStripMenuItem controller3;
+        private ToolStripMenuItem controller4;
     }
 }
 
