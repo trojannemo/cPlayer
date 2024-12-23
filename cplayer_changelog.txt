@@ -6,16 +6,28 @@ For instructions on how to use, click on Help -> How to Use
 
 CHANGE LOG:
 
-v3.1.0
-- Added support for Fortnite Festival files using the custom .fnf format and the original .m4a audio - a little wonky for now but it "works"
+v4.0.0
+
+BRIGHT EDITION IS HERE!
+I was told cPlayer could use a more modern UI and more recognizable buttons rather than rectangles that told you what they did. So I took this to heart and went to work. This is the outcome. I really like it and I hope you do too.
+For now Bright Edition and Dark Edition have feature parity with the exception of the one feature mentioned below, but I believe in the not-too-distant future I might just drop the Dark Edition and work exclusively on Bright Edition.
+Both editions have their own Github repositories, so anyone can clone the Dark Edition repo and keep working on it when I stop.
+
+(BRIGHT EDITION EXCLUSIVE) Added Game Style mode that displays the song's MIDI contents in a form inspired by Rock Band 3 - I do not have a 3D engine and this is not a YARG/Clone Hero competitor, this is simply a visualization tool, but I think this one is a major improvement over the 10-year old MIDI display mode (still there) - both modes are bottlenecked by WinForms limitations but i'm too far in to change platforms. I'll continue to work on streamlining and improving performance in the future.
+
+NEW FEATURES, BUG FIXES AND IMPROVEMENTS TO BOTH EDITIONS
+- Added limited Stage Kit support during playback of songs with MIDI files - enable Stage Kit on the Instruments menu, select the controller slot that your Stage Kit is occupying, click on the instrument name of the instrument that you want cPlayer to use to control the LEDs (all) and the strobe (drums only) - fogger is not currently integrated because I couldn't think of a use case for it, i'm open to ideas
+- Added microphone passthrough feature for a more genuine karaoke experience - your microphone must be recognized by Windows as a universal audio device - click on "My microphone isn't listed!" on the Microphone Control form for instructions on how to make your USB microphone work if it's not working right off the bat
+- Added support for Fortnite Festival files using the custom .fnf metadata format and the original .m4a audio - a little wonky for now but it "works"
 - Added support for YARG .yargsong format
-- Added support for playing back videos when using YARG's exCON format (video must be where the .mid and .mogg files are - see previous release notes for supported video file name and formats)
+- Added support for playing back videos when using YARG's exCON format (video must be where the .mid and .mogg files are - see previous release notes for supported video file name and formats, also supported in the more command Clone Hero/YARG folder structure)
 - Changed Karaoke Mode behavior so when it shows you one whole word at a time, it colors it progressively as the word is being sung, similarly to how it also colors the current phrase being sung
 - Added support for playing Karaoke Mode lyrics over video if the song has both a video file present and Vocals charted
+- Added ability to display unpitched vocals properly
 - Fixed compatibility issue with RB4-to-RB2 special DTAs files that would lead to the songs not loading or loading with wrong data
 - Fixed behavior when scanning for CON files it would encounter a file with permission restrictions and it would fail the entire scan instead of skipping the problem file
 - Fixed behavior when scanning a folder and there are no target files found, cPlayer would get stuck on loading and you couldn't do anything or exit the program
-- Many other bug fixes and code improvements
+- Many other bug fixes and significant code improvements as I was going through integrating the above
 
 ----------
 
