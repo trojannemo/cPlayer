@@ -3570,7 +3570,7 @@ namespace cPlayer
                     switch (harm)
                     {
                         case 0:
-                            note.NoteColor = !doMIDIHarm1onVocals ? GetNoteColor(note.NoteNumber, drums) : Harm1Color;
+                            note.NoteColor = !doMIDIHarm1onVocals ? GetNoteColor(note.NoteNumber) : Harm1Color;
                             break;
                         case 1:
                             note.NoteColor = Harm1Color;
