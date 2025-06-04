@@ -6,8 +6,14 @@ For instructions on how to use, click on Help -> How to Use
 
 CHANGE LOG:
 
-v4.0.0
+v4.0.1
+- Fixed broken compatibility with songs that use .ini metadata files introduced in the big v4.0.0 update
+- [BRIGHT EDITION ONLY] Fixed bug where on Game Style mode orange and green notes were flipped
+- [BRIGHT EDITION ONLY] Changed behavior of how play/pause/stop buttons work to eliminate bug where you would have to click on pause twice before it would pause
 
+----------
+
+v4.0.0
 BRIGHT EDITION IS HERE!
 I was told cPlayer could use a more modern UI and more recognizable buttons rather than rectangles that told you what they did. So I took this to heart and went to work. This is the outcome. I really like it and I hope you do too.
 For now Bright Edition and Dark Edition have feature parity with the exception of the one feature mentioned below, but I believe in the not-too-distant future I might just drop the Dark Edition and work exclusively on Bright Edition.
