@@ -748,6 +748,7 @@ namespace cPlayer
         public List<int> NoteRange { get; set; }
         public int ActiveIndex { get; set; }
         public List<SpecialMarker> Solos { get; set; } 
+
         public void Sort()
         {
             ChartedNotes.Sort((a,b) => a.NoteStart.CompareTo(b.NoteStart));
