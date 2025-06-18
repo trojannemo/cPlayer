@@ -103,6 +103,9 @@ namespace cPlayer
             this.displayAlbumArt = new System.Windows.Forms.ToolStripMenuItem();
             this.displayAudioSpectrum = new System.Windows.Forms.ToolStripMenuItem();
             this.displayKaraokeMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectBackgroundColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectLyricColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectHighlightColor = new System.Windows.Forms.ToolStripMenuItem();
             this.displayMIDIChartVisuals = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
             this.styleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -181,6 +184,7 @@ namespace cPlayer
             this.Uploader = new System.ComponentModel.BackgroundWorker();
             this.updater = new System.ComponentModel.BackgroundWorker();
             this.gifTmr = new System.Windows.Forms.Timer(this.components);
+            this.restoreDefaultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picVisuals)).BeginInit();
             this.picVisuals.SuspendLayout();
@@ -706,7 +710,7 @@ namespace cPlayer
             this.controller4});
             this.stageKitToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.stageKitToolStripMenuItem.Name = "stageKitToolStripMenuItem";
-            this.stageKitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.stageKitToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.stageKitToolStripMenuItem.Text = "Enable Stage Kit";
             this.stageKitToolStripMenuItem.CheckedChanged += new System.EventHandler(this.stageKitToolStripMenuItem_CheckedChanged);
             this.stageKitToolStripMenuItem.Click += new System.EventHandler(this.stageKitToolStripMenuItem_Click);
@@ -848,7 +852,7 @@ namespace cPlayer
             this.toolStripMenuItem8,
             this.styleToolStripMenuItem});
             this.VisualsContextMenu.Name = "VisualsContextMenu";
-            this.VisualsContextMenu.Size = new System.Drawing.Size(215, 148);
+            this.VisualsContextMenu.Size = new System.Drawing.Size(215, 170);
             this.VisualsContextMenu.Opening += new System.ComponentModel.CancelEventHandler(this.VisualsContextMenu_Opening);
             // 
             // displayBackgroundVideo
@@ -891,11 +895,43 @@ namespace cPlayer
             // displayKaraokeMode
             // 
             this.displayKaraokeMode.BackColor = System.Drawing.Color.Black;
+            this.displayKaraokeMode.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.selectBackgroundColor,
+            this.selectLyricColor,
+            this.selectHighlightColor,
+            this.restoreDefaultsToolStripMenuItem});
             this.displayKaraokeMode.ForeColor = System.Drawing.Color.White;
             this.displayKaraokeMode.Name = "displayKaraokeMode";
             this.displayKaraokeMode.Size = new System.Drawing.Size(214, 22);
             this.displayKaraokeMode.Text = "Display: Karaoke Mode";
             this.displayKaraokeMode.Click += new System.EventHandler(this.displayKaraokeMode_Click);
+            // 
+            // selectBackgroundColor
+            // 
+            this.selectBackgroundColor.BackColor = System.Drawing.Color.Black;
+            this.selectBackgroundColor.ForeColor = System.Drawing.Color.White;
+            this.selectBackgroundColor.Name = "selectBackgroundColor";
+            this.selectBackgroundColor.Size = new System.Drawing.Size(204, 22);
+            this.selectBackgroundColor.Text = "Select Background Color";
+            this.selectBackgroundColor.Click += new System.EventHandler(this.selectBackgroundColor_Click);
+            // 
+            // selectLyricColor
+            // 
+            this.selectLyricColor.BackColor = System.Drawing.Color.Black;
+            this.selectLyricColor.ForeColor = System.Drawing.Color.White;
+            this.selectLyricColor.Name = "selectLyricColor";
+            this.selectLyricColor.Size = new System.Drawing.Size(204, 22);
+            this.selectLyricColor.Text = "Select Lyric Color";
+            this.selectLyricColor.Click += new System.EventHandler(this.selectLyricColor_Click);
+            // 
+            // selectHighlightColor
+            // 
+            this.selectHighlightColor.BackColor = System.Drawing.Color.Black;
+            this.selectHighlightColor.ForeColor = System.Drawing.Color.White;
+            this.selectHighlightColor.Name = "selectHighlightColor";
+            this.selectHighlightColor.Size = new System.Drawing.Size(204, 22);
+            this.selectHighlightColor.Text = "Select Highlight Color";
+            this.selectHighlightColor.Click += new System.EventHandler(this.selectHighlightColor_Click);
             // 
             // displayMIDIChartVisuals
             // 
@@ -1742,6 +1778,15 @@ namespace cPlayer
             this.gifTmr.Interval = 16;
             this.gifTmr.Tick += new System.EventHandler(this.gifTmr_Tick);
             // 
+            // restoreDefaultsToolStripMenuItem
+            // 
+            this.restoreDefaultsToolStripMenuItem.BackColor = System.Drawing.Color.Black;
+            this.restoreDefaultsToolStripMenuItem.ForeColor = System.Drawing.Color.White;
+            this.restoreDefaultsToolStripMenuItem.Name = "restoreDefaultsToolStripMenuItem";
+            this.restoreDefaultsToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.restoreDefaultsToolStripMenuItem.Text = "Restore Defaults";
+            this.restoreDefaultsToolStripMenuItem.Click += new System.EventHandler(this.restoreDefaultsToolStripMenuItem_Click);
+            // 
             // frmMain
             // 
             this.AllowDrop = true;
@@ -1944,6 +1989,10 @@ namespace cPlayer
         private ToolStripMenuItem controller2;
         private ToolStripMenuItem controller3;
         private ToolStripMenuItem controller4;
+        private ToolStripMenuItem selectBackgroundColor;
+        private ToolStripMenuItem selectLyricColor;
+        private ToolStripMenuItem selectHighlightColor;
+        private ToolStripMenuItem restoreDefaultsToolStripMenuItem;
     }
 }
 
