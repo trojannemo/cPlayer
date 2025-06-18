@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using cPlayer.x360;
+using NautilusFREE;
+using Un4seen.Bass;
 
 namespace cPlayer
 {
@@ -14,8 +16,10 @@ namespace cPlayer
         private readonly frmMain xParent;
         public bool UserCanceled;
         private readonly DTAParser Parser;
+        private readonly bool doScanAudio;
+        private readonly nTools nautilus;
 
-        public Rebuilder(frmMain parent, List<Song> playlist)
+        public Rebuilder(frmMain parent, List<Song> playlist, bool doAudio = false)
         {
             InitializeComponent();
             xParent = parent;
@@ -23,6 +27,8 @@ namespace cPlayer
             Parser = new DTAParser();
             CurrentPlaylist = playlist;
             RebuiltPlaylist = new List<Song>();
+            nautilus = new nTools();
+            doScanAudio = doAudio;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -81,13 +87,18 @@ namespace cPlayer
                         if (song.InternalName == playlistSong.InternalName) break;
                     }
                 }
+                long audioLength = 0;
+                if (doScanAudio)
+                {
+                    audioLength = GetAudioDuration(playlistSong.Location);
+                }
                 var dtaSong = Parser.Songs[index];
                 var newSong = new Song
                 {
                     Name = xParent.CleanArtistSong(dtaSong.Name),
                     Artist = xParent.CleanArtistSong(dtaSong.Artist),
                     Location = playlistSong.Location,
-                    Length = dtaSong.Length > 0 ? dtaSong.Length : playlistSong.Length,
+                    Length = audioLength > 0 ? audioLength : (dtaSong.Length > 0 ? dtaSong.Length : playlistSong.Length),
                     InternalName = dtaSong.InternalName,
                     Album = dtaSong.Album,
                     Year = dtaSong.YearReleased,
@@ -113,6 +124,33 @@ namespace cPlayer
                 };
                 RebuiltPlaylist.Add(newSong);
             }
+        }
+
+        private long GetAudioDuration(string file)
+        {
+            var xPackage = new STFSPackage(file);
+            if (!xPackage.ParseSuccess) return 0;
+            if (!Parser.ExtractDTA(xPackage)) return 0;
+            if (!Parser.ReadDTA(Parser.DTA)) return 0;
+            var internalName = Parser.Songs[0].InternalName;
+            var xMogg = xPackage.GetFile("songs/" + internalName + "/" + internalName + ".mogg");
+            if (xMogg == null)
+            {
+                xPackage.CloseIO();
+                return 0;
+            }
+            var mData = xMogg.Extract();
+            xPackage.CloseIO();
+            if (mData == null || mData.Length == 0) return 0;
+            if (!nautilus.DecM(mData, false, true, DecryptMode.ToMemory)) return 0;
+            var stream = 0;
+            stream = Bass.BASS_StreamCreateFile(nautilus.GetOggStreamIntPtr(true), 0L, nautilus.NextSongOggData.Length, BASSFlag.BASS_STREAM_DECODE | BASSFlag.BASS_SAMPLE_FLOAT);
+            var len = Bass.BASS_ChannelGetLength(stream);
+            var totaltime = Bass.BASS_ChannelBytes2Seconds(stream, len); // the total time length
+            var Length = (int)(totaltime * 1000);
+            nautilus.ReleaseStreamHandle(true);
+            Bass.BASS_StreamFree(stream);
+            return Length;
         }
     }
 }

@@ -8469,34 +8469,7 @@ namespace cPlayer
 
         private void rebuildPlaylistMetadata_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("This might take a while...are you sure you want to do this now?",
-                AppName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
-            
-            DoClickStop();
-            btnClear.PerformClick();
-            var rebuilder = new Rebuilder(this, StaticPlaylist);
-            rebuilder.ShowDialog();
-            if (rebuilder.UserCanceled)
-            {
-                MessageBox.Show("Rebuilding was canceled, no changes to apply", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                rebuilder.Dispose();
-                return;
-            }
-            if (rebuilder.RebuiltPlaylist.Count == 0)
-            {
-                MessageBox.Show("Rebuilt playlist contains 0 items, nothing to do", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                rebuilder.Dispose();
-                return;
-
-            }
-            ClearAll();
-            StaticPlaylist = rebuilder.RebuiltPlaylist;
-            Playlist = StaticPlaylist;
-            rebuilder.Dispose();
-            MessageBox.Show("Rebuilding completed successfully...reloading playlist now...", AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
-            ReloadPlaylist(Playlist);
-            UpdateHighlights();
-            MarkAsModified();
+            doRebuildPlaylist(false);
         }
 
         private void playBGVideos_Click(object sender, EventArgs e)
@@ -8709,6 +8682,43 @@ namespace cPlayer
             KaraokeModeBackground = Color.Black;
             KaraokeModeHighlight = Color.LightSkyBlue;
             KaraokeModeLyric = Color.WhiteSmoke;
+        }
+
+        private void rebuildPlaylistmetadataAudio_Click(object sender, EventArgs e)
+        {
+            doRebuildPlaylist(true);
+        }
+
+        private void doRebuildPlaylist(bool doAudio)
+        {
+            if (MessageBox.Show("This might take a while...are you sure you want to do this now?",
+                AppName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+            DoClickStop();
+            btnClear.PerformClick();
+            var rebuilder = new Rebuilder(this, StaticPlaylist, true);
+            rebuilder.ShowDialog();
+            if (rebuilder.UserCanceled)
+            {
+                MessageBox.Show("Rebuilding was canceled, no changes to apply", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                rebuilder.Dispose();
+                return;
+            }
+            if (rebuilder.RebuiltPlaylist.Count == 0)
+            {
+                MessageBox.Show("Rebuilt playlist contains 0 items, nothing to do", AppName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                rebuilder.Dispose();
+                return;
+
+            }
+            ClearAll();
+            StaticPlaylist = rebuilder.RebuiltPlaylist;
+            Playlist = StaticPlaylist;
+            rebuilder.Dispose();
+            MessageBox.Show("Rebuilding completed successfully...reloading playlist now...", AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            ReloadPlaylist(Playlist);
+            UpdateHighlights();
+            MarkAsModified();
         }
     }
 
