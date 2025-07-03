@@ -1,10 +1,29 @@
 cPlayer - The Rock Band Customs Player
 Created by TrojanNemo
 For instructions on how to use, click on Help -> How to Use
-© 2014-2024
+© 2014-2025
 -------------------
 
 CHANGE LOG:
+
+v4.0.3
+
+- Added option to select background color, lyric color and highlight color when using Karaoke Mode
+- Added option to Rebuild Playlist (metadata + audio) which will not only scan and update the playlist metadata but will also scan the .mogg files and use the actual audio length for the duration - thereby fixing songs that do not have duration in their DTA files - this is a slow process but it seems to be accurate
+
+----------
+
+v4.0.2
+
+- Changed video player from WMP to VLC, more modern and should work on Linux via WINE
+- Fixed issue where the player would hang at the end of the song if there was only one song in your playlist and you had Shuffle Songs enabled
+- Added support for custom author name colors (mainly a Clone Hero thing)
+- Fixed reading of crazy track number values from bad Clone Hero .ini files
+- Fixed playback of songs with exactly eight channels where channels would be mixed up and you would not be able to isolate them correctly with multitrack songs
+- [BRIGHT EDITION ONLY] HOPOs are here! - when playing in Game Style mode, HOPOs will be displayed for BASS and GUITAR charts where appropriate
+- [BRIGHT EDITION ONLY] Fixed behavior where Game Mode instrument charts would leave empty vertical space to allow for non existing vocal tracks in instrumentals
+
+----------
 
 v4.0.1
 - Fixed broken compatibility with songs that use .ini metadata files introduced in the big v4.0.0 update
