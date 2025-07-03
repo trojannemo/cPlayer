@@ -83,6 +83,16 @@ namespace cPlayer.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap karaoke_outro {
+            get {
+                object obj = ResourceManager.GetObject("karaoke_outro", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap loading_blue {
             get {
                 object obj = ResourceManager.GetObject("loading_blue", resourceCulture);

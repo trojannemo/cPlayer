@@ -320,6 +320,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="favicon.ico" />
+    <None Include="Resources\karaoke_outro.png" />
     <Content Include="Resources\random.png" />
     <None Include="Resources\cowbellb.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

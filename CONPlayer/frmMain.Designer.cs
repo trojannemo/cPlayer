@@ -52,6 +52,7 @@ namespace cPlayer
             this.selectAndAddSongsManually = new System.Windows.Forms.ToolStripMenuItem();
             this.scanForSongsAutomatically = new System.Windows.Forms.ToolStripMenuItem();
             this.rebuildPlaylistMetadata = new System.Windows.Forms.ToolStripMenuItem();
+            this.rebuildPlaylistmetadataAudio = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.viewSongDetails = new System.Windows.Forms.ToolStripMenuItem();
             this.takeScreenshot = new System.Windows.Forms.ToolStripMenuItem();
@@ -185,7 +186,14 @@ namespace cPlayer
             this.Uploader = new System.ComponentModel.BackgroundWorker();
             this.updater = new System.ComponentModel.BackgroundWorker();
             this.gifTmr = new System.Windows.Forms.Timer(this.components);
-            this.rebuildPlaylistmetadataAudio = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem13 = new System.Windows.Forms.ToolStripSeparator();
+            this.classicKaraokeMode = new System.Windows.Forms.ToolStripMenuItem();
+            this.cPlayerStyle = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem14 = new System.Windows.Forms.ToolStripSeparator();
+            this.harmony2TextColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.harmony2HighlightColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.harmony3TextColor = new System.Windows.Forms.ToolStripMenuItem();
+            this.harmony3HighlightColor = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picVisuals)).BeginInit();
             this.picVisuals.SuspendLayout();
@@ -393,6 +401,15 @@ namespace cPlayer
             this.rebuildPlaylistMetadata.Size = new System.Drawing.Size(259, 22);
             this.rebuildPlaylistMetadata.Text = "Rebuild playlist (metadata only)";
             this.rebuildPlaylistMetadata.Click += new System.EventHandler(this.rebuildPlaylistMetadata_Click);
+            // 
+            // rebuildPlaylistmetadataAudio
+            // 
+            this.rebuildPlaylistmetadataAudio.BackColor = System.Drawing.Color.Black;
+            this.rebuildPlaylistmetadataAudio.ForeColor = System.Drawing.Color.White;
+            this.rebuildPlaylistmetadataAudio.Name = "rebuildPlaylistmetadataAudio";
+            this.rebuildPlaylistmetadataAudio.Size = new System.Drawing.Size(259, 22);
+            this.rebuildPlaylistmetadataAudio.Text = "Rebuild playlist (metadata + audio)";
+            this.rebuildPlaylistmetadataAudio.Click += new System.EventHandler(this.rebuildPlaylistmetadataAudio_Click);
             // 
             // toolStripMenuItem1
             // 
@@ -898,9 +915,17 @@ namespace cPlayer
             // 
             this.displayKaraokeMode.BackColor = System.Drawing.Color.Black;
             this.displayKaraokeMode.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.classicKaraokeMode,
+            this.cPlayerStyle,
+            this.toolStripMenuItem14,
             this.selectBackgroundColor,
             this.selectLyricColor,
             this.selectHighlightColor,
+            this.harmony2TextColor,
+            this.harmony2HighlightColor,
+            this.harmony3TextColor,
+            this.harmony3HighlightColor,
+            this.toolStripMenuItem13,
             this.restoreDefaultsToolStripMenuItem});
             this.displayKaraokeMode.ForeColor = System.Drawing.Color.White;
             this.displayKaraokeMode.Name = "displayKaraokeMode";
@@ -913,8 +938,8 @@ namespace cPlayer
             this.selectBackgroundColor.BackColor = System.Drawing.Color.Black;
             this.selectBackgroundColor.ForeColor = System.Drawing.Color.White;
             this.selectBackgroundColor.Name = "selectBackgroundColor";
-            this.selectBackgroundColor.Size = new System.Drawing.Size(204, 22);
-            this.selectBackgroundColor.Text = "Select Background Color";
+            this.selectBackgroundColor.Size = new System.Drawing.Size(254, 22);
+            this.selectBackgroundColor.Text = "Background Color";
             this.selectBackgroundColor.Click += new System.EventHandler(this.selectBackgroundColor_Click);
             // 
             // selectLyricColor
@@ -922,8 +947,8 @@ namespace cPlayer
             this.selectLyricColor.BackColor = System.Drawing.Color.Black;
             this.selectLyricColor.ForeColor = System.Drawing.Color.White;
             this.selectLyricColor.Name = "selectLyricColor";
-            this.selectLyricColor.Size = new System.Drawing.Size(204, 22);
-            this.selectLyricColor.Text = "Select Lyric Color";
+            this.selectLyricColor.Size = new System.Drawing.Size(254, 22);
+            this.selectLyricColor.Text = "Lead / Harmony 1 Text Color";
             this.selectLyricColor.Click += new System.EventHandler(this.selectLyricColor_Click);
             // 
             // selectHighlightColor
@@ -931,8 +956,8 @@ namespace cPlayer
             this.selectHighlightColor.BackColor = System.Drawing.Color.Black;
             this.selectHighlightColor.ForeColor = System.Drawing.Color.White;
             this.selectHighlightColor.Name = "selectHighlightColor";
-            this.selectHighlightColor.Size = new System.Drawing.Size(204, 22);
-            this.selectHighlightColor.Text = "Select Highlight Color";
+            this.selectHighlightColor.Size = new System.Drawing.Size(254, 22);
+            this.selectHighlightColor.Text = "Lead / Harmony 1 Highlight Color";
             this.selectHighlightColor.Click += new System.EventHandler(this.selectHighlightColor_Click);
             // 
             // restoreDefaultsToolStripMenuItem
@@ -940,7 +965,7 @@ namespace cPlayer
             this.restoreDefaultsToolStripMenuItem.BackColor = System.Drawing.Color.Black;
             this.restoreDefaultsToolStripMenuItem.ForeColor = System.Drawing.Color.White;
             this.restoreDefaultsToolStripMenuItem.Name = "restoreDefaultsToolStripMenuItem";
-            this.restoreDefaultsToolStripMenuItem.Size = new System.Drawing.Size(204, 22);
+            this.restoreDefaultsToolStripMenuItem.Size = new System.Drawing.Size(254, 22);
             this.restoreDefaultsToolStripMenuItem.Text = "Restore Defaults";
             this.restoreDefaultsToolStripMenuItem.Click += new System.EventHandler(this.restoreDefaultsToolStripMenuItem_Click);
             // 
@@ -1789,14 +1814,71 @@ namespace cPlayer
             this.gifTmr.Interval = 16;
             this.gifTmr.Tick += new System.EventHandler(this.gifTmr_Tick);
             // 
-            // rebuildPlaylistmetadataAudio
+            // toolStripMenuItem13
             // 
-            this.rebuildPlaylistmetadataAudio.BackColor = System.Drawing.Color.Black;
-            this.rebuildPlaylistmetadataAudio.ForeColor = System.Drawing.Color.White;
-            this.rebuildPlaylistmetadataAudio.Name = "rebuildPlaylistmetadataAudio";
-            this.rebuildPlaylistmetadataAudio.Size = new System.Drawing.Size(259, 22);
-            this.rebuildPlaylistmetadataAudio.Text = "Rebuild playlist (metadata + audio)";
-            this.rebuildPlaylistmetadataAudio.Click += new System.EventHandler(this.rebuildPlaylistmetadataAudio_Click);
+            this.toolStripMenuItem13.Name = "toolStripMenuItem13";
+            this.toolStripMenuItem13.Size = new System.Drawing.Size(251, 6);
+            // 
+            // classicKaraokeMode
+            // 
+            this.classicKaraokeMode.BackColor = System.Drawing.Color.Black;
+            this.classicKaraokeMode.Checked = true;
+            this.classicKaraokeMode.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.classicKaraokeMode.ForeColor = System.Drawing.Color.White;
+            this.classicKaraokeMode.Name = "classicKaraokeMode";
+            this.classicKaraokeMode.Size = new System.Drawing.Size(254, 22);
+            this.classicKaraokeMode.Text = "Classic Karaoke";
+            this.classicKaraokeMode.Click += new System.EventHandler(this.classicKaraokeMode_Click);
+            // 
+            // cPlayerStyle
+            // 
+            this.cPlayerStyle.BackColor = System.Drawing.Color.Black;
+            this.cPlayerStyle.ForeColor = System.Drawing.Color.White;
+            this.cPlayerStyle.Name = "cPlayerStyle";
+            this.cPlayerStyle.Size = new System.Drawing.Size(254, 22);
+            this.cPlayerStyle.Text = "cPlayer Style";
+            this.cPlayerStyle.Click += new System.EventHandler(this.cPlayerStyle_Click);
+            // 
+            // toolStripMenuItem14
+            // 
+            this.toolStripMenuItem14.Name = "toolStripMenuItem14";
+            this.toolStripMenuItem14.Size = new System.Drawing.Size(251, 6);
+            // 
+            // harmony2TextColor
+            // 
+            this.harmony2TextColor.BackColor = System.Drawing.Color.Black;
+            this.harmony2TextColor.ForeColor = System.Drawing.Color.White;
+            this.harmony2TextColor.Name = "harmony2TextColor";
+            this.harmony2TextColor.Size = new System.Drawing.Size(254, 22);
+            this.harmony2TextColor.Text = "Harmony 2 Text Color";
+            this.harmony2TextColor.Click += new System.EventHandler(this.harmony2TextColor_Click);
+            // 
+            // harmony2HighlightColor
+            // 
+            this.harmony2HighlightColor.BackColor = System.Drawing.Color.Black;
+            this.harmony2HighlightColor.ForeColor = System.Drawing.Color.White;
+            this.harmony2HighlightColor.Name = "harmony2HighlightColor";
+            this.harmony2HighlightColor.Size = new System.Drawing.Size(254, 22);
+            this.harmony2HighlightColor.Text = "Harmony 2 Highlight Color";
+            this.harmony2HighlightColor.Click += new System.EventHandler(this.harmony2HighlightColor_Click);
+            // 
+            // harmony3TextColor
+            // 
+            this.harmony3TextColor.BackColor = System.Drawing.Color.Black;
+            this.harmony3TextColor.ForeColor = System.Drawing.Color.White;
+            this.harmony3TextColor.Name = "harmony3TextColor";
+            this.harmony3TextColor.Size = new System.Drawing.Size(254, 22);
+            this.harmony3TextColor.Text = "Harmony 3 Text Color";
+            this.harmony3TextColor.Click += new System.EventHandler(this.harmony3TextColor_Click);
+            // 
+            // harmony3HighlightColor
+            // 
+            this.harmony3HighlightColor.BackColor = System.Drawing.Color.Black;
+            this.harmony3HighlightColor.ForeColor = System.Drawing.Color.White;
+            this.harmony3HighlightColor.Name = "harmony3HighlightColor";
+            this.harmony3HighlightColor.Size = new System.Drawing.Size(254, 22);
+            this.harmony3HighlightColor.Text = "Harmony 3 Highlight Color";
+            this.harmony3HighlightColor.Click += new System.EventHandler(this.harmony3HighlightColor_Click);
             // 
             // frmMain
             // 
@@ -1804,12 +1886,12 @@ namespace cPlayer
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Black;
             this.ClientSize = new System.Drawing.Size(994, 691);
+            this.Controls.Add(this.picVisuals);
             this.Controls.Add(this.btnGoTo);
             this.Controls.Add(this.btnSearch);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.txtSearch);
             this.Controls.Add(this.lblUpdates);
-            this.Controls.Add(this.picVisuals);
             this.Controls.Add(this.panelPlaylist);
             this.Controls.Add(this.panelPlaying);
             this.Controls.Add(this.menuStrip1);
@@ -2005,6 +2087,14 @@ namespace cPlayer
         private ToolStripMenuItem selectHighlightColor;
         private ToolStripMenuItem restoreDefaultsToolStripMenuItem;
         private ToolStripMenuItem rebuildPlaylistmetadataAudio;
+        private ToolStripMenuItem classicKaraokeMode;
+        private ToolStripSeparator toolStripMenuItem13;
+        private ToolStripMenuItem cPlayerStyle;
+        private ToolStripSeparator toolStripMenuItem14;
+        private ToolStripMenuItem harmony2TextColor;
+        private ToolStripMenuItem harmony2HighlightColor;
+        private ToolStripMenuItem harmony3TextColor;
+        private ToolStripMenuItem harmony3HighlightColor;
     }
 }
 

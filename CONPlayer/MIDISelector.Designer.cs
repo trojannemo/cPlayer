@@ -121,7 +121,7 @@ namespace cPlayer
             // btnNone
             // 
             this.btnNone.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnNone.Location = new System.Drawing.Point(101, 79);
+            this.btnNone.Location = new System.Drawing.Point(81, 79);
             this.btnNone.Name = "btnNone";
             this.btnNone.Size = new System.Drawing.Size(60, 23);
             this.btnNone.TabIndex = 8;
@@ -168,7 +168,7 @@ namespace cPlayer
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(60, 23);
             this.btnSave.TabIndex = 11;
-            this.btnSave.Text = "Save";
+            this.btnSave.Text = "Close";
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
