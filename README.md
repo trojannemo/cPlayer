@@ -1,5 +1,7 @@
 # 🎮 cPlayer (Dark Edition)
 
+![cPlayer (Dark Edition)](https://nemosnautilus.com/cplayer/v400dark.jpg)
+
 ---
 
 ## ⚠️ Project Status — Archived
